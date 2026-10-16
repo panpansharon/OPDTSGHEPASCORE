@@ -80,7 +80,7 @@
           <i class="fa-solid fa-share-nodes text-xs"></i> 展示版連結
         </button>
 
-        <!-- 名單與項目設定 (admin-only) -->
+        <!-- 名單設定 (admin-only) -->
         <button id="btnOpenConfig" class="admin-only inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 hover:bg-indigo-700 text-indigo-100 rounded-md transition font-medium border border-indigo-700/60">
           <i class="fa-solid fa-sliders text-xs"></i> 名單設定
         </button>
@@ -104,21 +104,20 @@
   <!-- 主內容容器 -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
 
-    <!-- 週次管理與日期切換面板 (重點新增) -->
+    <!-- 週次管理與日期切換面板 -->
     <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 mb-5 flex flex-wrap items-center justify-between gap-4 no-print">
       
       <!-- 左側：週次切換與新建週表 -->
       <div class="flex items-center flex-wrap gap-2.5">
         <div class="flex items-center gap-1.5">
           <label class="text-xs font-bold text-slate-500 flex items-center gap-1">
-            <i class="fa-solid fa-folder-open text-indigo-500"></i> 歷史週次：
+            <i class="fa-solid fa-folder-open text-indigo-500"></i> 當前週次：
           </label>
-          <select id="weekSelector" class="bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]">
-            <!-- 動態注入各週次歷史 -->
+          <select id="weekSelector" class="bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[180px]">
           </select>
         </div>
 
-        <button id="btnCreateNewWeek" class="admin-only inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold shadow-2xs transition">
+        <button id="btnCreateNewWeek" class="admin-only inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold shadow-2xs transition">
           <i class="fa-solid fa-calendar-plus"></i> 新建一週排班表
         </button>
 
@@ -129,13 +128,13 @@
 
       <!-- 右側：自選日期設定時段 (以週為單位) -->
       <div class="flex items-center flex-wrap gap-3">
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-medium text-slate-500">起始週一：</span>
-          <input type="date" id="weekStartDatePicker" class="admin-only bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-medium text-slate-500">設定起始週一：</span>
+          <input type="date" id="weekStartDatePicker" class="admin-only bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div class="flex items-center gap-1.5">
           <span class="text-xs font-medium text-slate-500">週名稱：</span>
-          <input type="text" id="weekTitleInput" value="10/05 - 10/09 評核排程" class="bg-white border border-slate-300 rounded px-2.5 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[160px]">
+          <input type="text" id="weekTitleInput" value="10/05 - 10/09 評核排程" class="bg-white border border-slate-300 rounded px-2.5 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]">
         </div>
       </div>
 
@@ -143,9 +142,9 @@
 
     <!-- 檢視模式切換列 -->
     <div class="flex flex-wrap items-center justify-between gap-4 mb-4 no-print">
-      <div class="text-xs text-slate-400 flex items-center gap-1.5">
-        <i class="fa-solid fa-clock-rotate-left text-slate-400"></i>
-        <span>所有週次排程均會自動永久保留，可隨時從左上方下拉選單切換查閱歷次紀錄。</span>
+      <div class="text-xs text-slate-500 flex items-center gap-1.5">
+        <i class="fa-solid fa-clock-rotate-left text-indigo-500"></i>
+        <span>所有週次排程均會自動永久保留在瀏覽器中，隨時由左上方「當前週次」切換或新建。</span>
       </div>
 
       <div class="flex items-center gap-1 bg-slate-200 p-1 rounded-lg text-xs font-medium text-slate-600">
@@ -161,7 +160,7 @@
       </div>
     </div>
 
-    <!-- 區塊一：排程總表 (截圖時「僅截取」此節點，不截取下方教師彙總) -->
+    <!-- 區塊一：排程總表 (截圖時僅截取此節點) -->
     <div id="scheduleTableCaptureArea" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-8">
       
       <!-- 標頭展示區 -->
@@ -170,7 +169,6 @@
           <span class="text-xs uppercase tracking-wider font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">Schedule Board</span>
           <h2 id="displayWeekTitle" class="text-xl md:text-2xl font-bold text-slate-900 mt-1">10/05 - 10/09 評核排程總表</h2>
         </div>
-        <!-- 提示文字 (截圖與展示版時隱藏) -->
         <div class="hint-banner text-xs text-slate-400 flex items-center gap-1.5">
           <i class="fa-solid fa-circle-info text-blue-500"></i>
           <span>點擊格子中的「＋新增」即可直接為該時段排入評核</span>
@@ -183,11 +181,9 @@
           <thead>
             <tr id="calendarHeaderRow" class="bg-slate-100 text-slate-700 text-center font-semibold">
               <th class="border border-slate-300 px-3 py-3 w-20 bg-slate-200/70">時段</th>
-              <!-- 動態生成週一至週五日期標題 -->
             </tr>
           </thead>
           <tbody id="calendarTableBody">
-            <!-- JS 動態渲染上午與下午 -->
           </tbody>
         </table>
       </div>
@@ -228,7 +224,7 @@
 
     </div>
 
-    <!-- 區塊二：教師每週評核任務彙總 (在下載圖片中完全排除，僅供網頁查閱) -->
+    <!-- 區塊二：教師每週評核任務彙總 (截圖時完全排除) -->
     <div id="teacherSummarySection" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-8">
       
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
@@ -250,13 +246,11 @@
           <i class="fa-solid fa-filter text-indigo-500"></i> 請勾選教師姓名以顯示個人每週任務：
         </div>
         <div id="teacherCheckboxGroup" class="flex flex-wrap gap-2 text-xs">
-          <!-- 動態生成老師勾選 Chips -->
         </div>
       </div>
 
       <!-- 教師個人任務卡片展示區 -->
       <div id="teacherSummaryCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        <!-- 動態生成勾選之老師任務 -->
       </div>
 
       <div id="noTeacherSelectedAlert" class="hidden text-center py-8 text-slate-400 text-sm">
@@ -286,7 +280,7 @@
       </div>
       <div class="p-5 space-y-4 text-sm">
         <p class="text-xs text-slate-600 leading-relaxed">
-          此連結為**純唯讀展示模式**，排程總表不可新增/修改，且已完整鎖定當前這週的排班資料，適合直接複製並傳送到 LINE 或公佈群組：
+          此連結為<strong>純唯讀展示模式</strong>，排程總表不可新增/修改，且已完整鎖定當前這週的排班資料，適合直接複製並傳送到 LINE 或公佈群組：
         </p>
 
         <div class="flex items-center gap-2">
@@ -324,14 +318,13 @@
         
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">日期</label>
-            <select id="modalDate" class="w-full border border-slate-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
-              <!-- 動態根據當前週注入日期選項 -->
+            <label class="block text-xs font-semibold text-slate-600 mb-1">評核日期 (自動對應當前週)</label>
+            <select id="modalDate" class="w-full border border-slate-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white">
             </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">時段</label>
-            <select id="modalTimeSlot" class="w-full border border-slate-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+            <select id="modalTimeSlot" class="w-full border border-slate-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white">
               <option value="morning">上午 (早)</option>
               <option value="afternoon">下午 (午)</option>
             </select>
@@ -340,16 +333,15 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">評核項目</label>
-          <select id="modalCategory" class="w-full border border-slate-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
-            <!-- 動態填入 -->
+          <select id="modalCategory" class="w-full border border-slate-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white">
           </select>
         </div>
 
         <!-- 學員選擇 -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">受評學員 (PGY)</label>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">受評學員 (PGY) - 點選直接加入</label>
           <div class="flex gap-2">
-            <select id="studentDropdown" class="flex-1 border border-slate-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <select id="studentDropdown" class="flex-1 border border-slate-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
               <option value="">-- 點擊選擇學員加入 --</option>
             </select>
             <button type="button" id="btnAddStudentTag" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md text-xs font-medium text-slate-700">加入</button>
@@ -359,9 +351,9 @@
 
         <!-- 評核老師選擇 -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">評核教師</label>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">評核教師 - 點選直接加入</label>
           <div class="flex gap-2">
-            <select id="teacherDropdown" class="flex-1 border border-slate-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <select id="teacherDropdown" class="flex-1 border border-slate-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
               <option value="">-- 點擊選擇教師加入 --</option>
             </select>
             <button type="button" id="btnAddTeacherTag" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md text-xs font-medium text-slate-700">加入</button>
@@ -446,7 +438,6 @@
     let students = ['逸賢', '舒婷', '聖峰', '炤宇', '皓勛', '士軒', '映萱', '品臻', '瑋曈', '宜靖', '蓁均', '妤倢', '瑜軒', '妤柔'];
     let categories = ['EPA發藥', 'EPA覆核', 'DOPS調劑(CEPO)', 'EPA外用'];
 
-    // 預設示範週排程
     const defaultSampleWeek = {
       id: 'week_20261005',
       title: '10/05 - 10/09 評核排程',
@@ -475,55 +466,12 @@
       ]
     };
 
-    // 所有週次儲存清單 (多週管理庫)
     let weeksStore = [];
     let currentWeekId = '';
 
-    // 本地快取載入
-    function loadStorage() {
-      const savedWeeks = localStorage.getItem('tsgh_pharmacy_eval_weeks');
-      const savedCurrentId = localStorage.getItem('tsgh_pharmacy_current_week_id');
-      const savedTeachers = localStorage.getItem('tsgh_pharmacy_teachers');
-      const savedStudents = localStorage.getItem('tsgh_pharmacy_students');
-
-      if (savedTeachers) teachers = JSON.parse(savedTeachers);
-      if (savedStudents) students = JSON.parse(savedStudents);
-
-      if (savedWeeks) {
-        try {
-          weeksStore = JSON.parse(savedWeeks);
-        } catch(e) {
-          weeksStore = [defaultSampleWeek];
-        }
-      } else {
-        weeksStore = [defaultSampleWeek];
-      }
-
-      if (savedCurrentId && weeksStore.some(w => w.id === savedCurrentId)) {
-        currentWeekId = savedCurrentId;
-      } else {
-        currentWeekId = weeksStore[0].id;
-      }
-    }
-
-    // 本地快取儲存
-    function saveStorage() {
-      localStorage.setItem('tsgh_pharmacy_eval_weeks', JSON.stringify(weeksStore));
-      localStorage.setItem('tsgh_pharmacy_current_week_id', currentWeekId);
-      localStorage.setItem('tsgh_pharmacy_teachers', JSON.stringify(teachers));
-      localStorage.setItem('tsgh_pharmacy_students', JSON.stringify(students));
-    }
-
-    // 取得當前週物件
-    function getCurrentWeek() {
-      return weeksStore.find(w => w.id === currentWeekId) || weeksStore[0];
-    }
-
-    // 計算週一至週五日期物件
     function computeWeekDaysFromMonday(startDateStr) {
       const parts = startDateStr.split('-');
       const start = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      
       const dayNames = ['一', '二', '三', '四', '五'];
       const weekDates = [];
 
@@ -533,20 +481,100 @@
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         weekDates.push({
-          id: `${mm}/${dd}`,
-          label: `${mm}/${dd} (${dayNames[i]})`
+          id: mm + '/' + dd,
+          label: mm + '/' + dd + ' (' + dayNames[i] + ')'
         });
       }
       return weekDates;
     }
 
+    function loadStorage() {
+      try {
+        const savedWeeks = localStorage.getItem('tsgh_pharmacy_eval_weeks');
+        const savedCurrentId = localStorage.getItem('tsgh_pharmacy_current_week_id');
+        const savedTeachers = localStorage.getItem('tsgh_pharmacy_teachers');
+        const savedStudents = localStorage.getItem('tsgh_pharmacy_students');
+
+        if (savedTeachers) {
+          try { teachers = JSON.parse(savedTeachers); } catch(e) {}
+        }
+        if (savedStudents) {
+          try { students = JSON.parse(savedStudents); } catch(e) {}
+        }
+
+        if (savedWeeks) {
+          try {
+            weeksStore = JSON.parse(savedWeeks);
+          } catch(e) {
+            weeksStore = [JSON.parse(JSON.stringify(defaultSampleWeek))];
+          }
+        } else {
+          weeksStore = [JSON.parse(JSON.stringify(defaultSampleWeek))];
+        }
+
+        if (!Array.isArray(weeksStore) || weeksStore.length === 0) {
+          weeksStore = [JSON.parse(JSON.stringify(defaultSampleWeek))];
+        }
+
+        // 快取防呆修復：補全舊格式資料
+        weeksStore.forEach(function(w) {
+          if (!w.startDate) w.startDate = '2026-10-05';
+          if (!Array.isArray(w.dates) || w.dates.length === 0) {
+            w.dates = computeWeekDaysFromMonday(w.startDate);
+          }
+          if (!Array.isArray(w.sessions)) w.sessions = [];
+          if (!w.title) w.title = w.dates[0].id + ' - ' + w.dates[4].id + ' 評核排程';
+        });
+
+        if (savedCurrentId && weeksStore.some(function(w) { return w.id === savedCurrentId; })) {
+          currentWeekId = savedCurrentId;
+        } else {
+          currentWeekId = weeksStore[0].id;
+        }
+      } catch(err) {
+        console.error("loadStorage error", err);
+        weeksStore = [JSON.parse(JSON.stringify(defaultSampleWeek))];
+        currentWeekId = weeksStore[0].id;
+      }
+    }
+
+    function saveStorage() {
+      try {
+        localStorage.setItem('tsgh_pharmacy_eval_weeks', JSON.stringify(weeksStore));
+        localStorage.setItem('tsgh_pharmacy_current_week_id', currentWeekId);
+        localStorage.setItem('tsgh_pharmacy_teachers', JSON.stringify(teachers));
+        localStorage.setItem('tsgh_pharmacy_students', JSON.stringify(students));
+      } catch(e) {
+        console.warn("Storage write error", e);
+      }
+    }
+
+    function getCurrentWeek() {
+      let cur = weeksStore.find(function(w) { return w.id === currentWeekId; });
+      if (!cur) {
+        cur = weeksStore[0];
+        if (cur) currentWeekId = cur.id;
+      }
+      if (!cur) {
+        cur = JSON.parse(JSON.stringify(defaultSampleWeek));
+        weeksStore = [cur];
+        currentWeekId = cur.id;
+      }
+      if (!cur.startDate) cur.startDate = '2026-10-05';
+      if (!Array.isArray(cur.dates) || cur.dates.length === 0) {
+        cur.dates = computeWeekDaysFromMonday(cur.startDate);
+      }
+      if (!Array.isArray(cur.sessions)) cur.sessions = [];
+      return cur;
+    }
+
     // ==========================================
-    // 3. 週次切換與新建週表邏輯
+    // 3. 週次管理與切換
     // ==========================================
     function updateWeekSelectorUI() {
       const sel = document.getElementById('weekSelector');
       sel.innerHTML = '';
-      weeksStore.forEach(w => {
+      weeksStore.forEach(function(w) {
         const opt = document.createElement('option');
         opt.value = w.id;
         opt.textContent = w.title || w.id;
@@ -555,9 +583,7 @@
       });
     }
 
-    // 建立新的一週表單
     function createNewWeek() {
-      // 根據最後一週的日期推算下一週
       const cur = getCurrentWeek();
       let nextStartDateStr = '2026-10-12';
 
@@ -568,11 +594,11 @@
         const y = lastDate.getFullYear();
         const m = String(lastDate.getMonth() + 1).padStart(2, '0');
         const d = String(lastDate.getDate()).padStart(2, '0');
-        nextStartDateStr = `${y}-${m}-${d}`;
+        nextStartDateStr = y + '-' + m + '-' + d;
       }
 
       const generatedDates = computeWeekDaysFromMonday(nextStartDateStr);
-      const titleDefault = `${generatedDates[0].id} - ${generatedDates[4].id} 評核排程`;
+      const titleDefault = generatedDates[0].id + ' - ' + generatedDates[4].id + ' 評核排程';
       const weekId = 'week_' + nextStartDateStr.replace(/-/g, '') + '_' + Date.now();
 
       const newWeek = {
@@ -580,23 +606,24 @@
         title: titleDefault,
         startDate: nextStartDateStr,
         dates: generatedDates,
-        sessions: [] // 新表初始空白
+        sessions: []
       };
 
-      weeksStore.unshift(newWeek); // 放到最前面
+      weeksStore.unshift(newWeek);
       currentWeekId = weekId;
       saveStorage();
-      syncInputsFromCurrentWeek();
+
       updateWeekSelectorUI();
+      syncInputsFromCurrentWeek();
       refreshAllViews();
-      showToast('已成功建立新一週排程表！');
+      showToast('已成功建立「' + titleDefault + '」新排班表！');
     }
 
     function syncInputsFromCurrentWeek() {
       const cur = getCurrentWeek();
       if (!cur) return;
-      document.getElementById('weekTitleInput').value = cur.title;
-      document.getElementById('displayWeekTitle').textContent = cur.title;
+      document.getElementById('weekTitleInput').value = cur.title || '';
+      document.getElementById('displayWeekTitle').textContent = cur.title || '臨床評核排程總表';
       document.getElementById('weekStartDatePicker').value = cur.startDate || '2026-10-05';
     }
 
@@ -607,7 +634,7 @@
       const toast = document.getElementById('toast');
       document.getElementById('toastMsg').textContent = msg;
       toast.classList.remove('opacity-0');
-      setTimeout(() => toast.classList.add('opacity-0'), 2500);
+      setTimeout(function() { toast.classList.add('opacity-0'); }, 2500);
     }
 
     function getCategoryStyle(cat) {
@@ -616,33 +643,31 @@
 
     function getCategoryLink(cat) {
       if (EVALUATION_LINKS[cat]) return EVALUATION_LINKS[cat];
-      for (const [key, link] of Object.entries(EVALUATION_LINKS)) {
-        if (cat.includes(key)) return link;
+      for (const key in EVALUATION_LINKS) {
+        if (cat.indexOf(key) !== -1) return EVALUATION_LINKS[key];
       }
       return null;
     }
 
-    // 檢查 URL Hash 判斷是否為展示版
     function checkUrlMode() {
       const hash = window.location.hash;
-      if (hash.includes('view=display')) {
+      if (hash.indexOf('view=display') !== -1) {
         isDisplayMode = true;
         document.body.classList.add('is-display-mode');
         document.getElementById('displayModeBadge').classList.remove('hidden');
         document.getElementById('btnSwitchToAdmin').classList.remove('hidden');
-        document.getElementById('weekTitleInput').setAttribute('readonly', true);
+        document.getElementById('weekTitleInput').setAttribute('readonly', 'true');
         document.getElementById('weekTitleInput').classList.add('bg-slate-100', 'cursor-not-allowed');
-        document.getElementById('weekStartDatePicker').setAttribute('disabled', true);
+        document.getElementById('weekStartDatePicker').setAttribute('disabled', 'true');
         document.getElementById('weekStartDatePicker').classList.add('bg-slate-100', 'cursor-not-allowed');
 
-        // 若 URL 帶有 data 參數，解析出單週獨立排程
         const match = hash.match(/data=([^&]+)/);
         if (match && match[1]) {
           try {
             const decoded = JSON.parse(decodeURIComponent(escape(atob(match[1]))));
             if (decoded.currentWeek) {
               const incoming = decoded.currentWeek;
-              const existIdx = weeksStore.findIndex(w => w.id === incoming.id);
+              const existIdx = weeksStore.findIndex(function(w) { return w.id === incoming.id; });
               if (existIdx !== -1) {
                 weeksStore[existIdx] = incoming;
               } else {
@@ -668,15 +693,13 @@
       }
     }
 
-    // 渲染週曆 (自動根據當前週自訂日期排程)
     function renderCalendar() {
       const cur = getCurrentWeek();
       const theadRow = document.getElementById('calendarHeaderRow');
       const tbody = document.getElementById('calendarTableBody');
       
-      // 動態更新星期一至五日期標題
       theadRow.innerHTML = '<th class="border border-slate-300 px-3 py-3 w-20 bg-slate-200/70">時段</th>';
-      cur.dates.forEach(d => {
+      cur.dates.forEach(function(d) {
         const th = document.createElement('th');
         th.className = 'border border-slate-300 px-3 py-3 w-1/5 min-w-[170px]';
         th.textContent = d.label;
@@ -689,20 +712,20 @@
         { id: 'afternoon', label: '下午', sub: '(午)' }
       ];
 
-      timeSlots.forEach(slot => {
+      timeSlots.forEach(function(slot) {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/40 transition';
 
         const tdHeader = document.createElement('td');
         tdHeader.className = 'border border-slate-300 p-2 text-center bg-slate-50 font-medium text-slate-700 align-middle';
-        tdHeader.innerHTML = `<span class="text-base font-bold">${slot.label}</span><br><span class="text-xs text-slate-400 font-mono">${slot.sub}</span>`;
+        tdHeader.innerHTML = '<span class="text-base font-bold">' + slot.label + '</span><br><span class="text-xs text-slate-400 font-mono">' + slot.sub + '</span>';
         tr.appendChild(tdHeader);
 
-        cur.dates.forEach(d => {
+        cur.dates.forEach(function(d) {
           const td = document.createElement('td');
           td.className = 'border border-slate-300 p-2 align-top bg-white min-h-[140px]';
 
-          const slotSessions = (cur.sessions || []).filter(s => s.date === d.id && s.timeSlot === slot.id);
+          const slotSessions = (cur.sessions || []).filter(function(s) { return s.date === d.id && s.timeSlot === slot.id; });
           const container = document.createElement('div');
           container.className = 'flex flex-col gap-2 min-h-[110px]';
 
@@ -712,35 +735,33 @@
             emptyHint.textContent = '無排班';
             container.appendChild(emptyHint);
           } else {
-            slotSessions.forEach(session => {
+            slotSessions.forEach(function(session) {
               const card = document.createElement('div');
               const style = getCategoryStyle(session.category);
-              card.className = `border-l-4 ${style.border} bg-white shadow-xs rounded p-2 text-xs border border-slate-200 hover:shadow-md transition relative group`;
+              card.className = 'border-l-4 ' + style.border + ' bg-white shadow-xs rounded p-2 text-xs border border-slate-200 hover:shadow-md transition relative group';
 
-              card.innerHTML = `
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-bold px-1.5 py-0.5 rounded text-[11px] ${style.badgeBg} ${style.badgeText}">${session.category}</span>
-                  <div class="card-action-btn flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                    <button onclick="editSession('${session.id}')" title="編輯" class="text-slate-400 hover:text-indigo-600 p-0.5"><i class="fa-solid fa-pen"></i></button>
-                  </div>
-                </div>
-                <div class="text-slate-800 font-semibold mb-1">
-                  ${session.students.join('、')}
-                </div>
-                <div class="text-[11px] text-slate-500 flex items-start gap-1">
-                  <span class="text-slate-400 shrink-0">師：</span>
-                  <span class="text-indigo-900 font-medium">${session.teachers.join('、')}</span>
-                </div>
-              `;
+              card.innerHTML = 
+                '<div class="flex items-center justify-between mb-1">' +
+                  '<span class="font-bold px-1.5 py-0.5 rounded text-[11px] ' + style.badgeBg + ' ' + style.badgeText + '">' + session.category + '</span>' +
+                  '<div class="card-action-btn flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">' +
+                    '<button onclick="editSession(\'' + session.id + '\')" title="編輯" class="text-slate-400 hover:text-indigo-600 p-0.5"><i class="fa-solid fa-pen"></i></button>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="text-slate-800 font-semibold mb-1">' +
+                  (session.students || []).join('、') +
+                '</div>' +
+                '<div class="text-[11px] text-slate-500 flex items-start gap-1">' +
+                  '<span class="text-slate-400 shrink-0">師：</span>' +
+                  '<span class="text-indigo-900 font-medium">' + (session.teachers || []).join('、') + '</span>' +
+                '</div>';
               container.appendChild(card);
             });
           }
 
-          // 新增按鈕
           const btnAdd = document.createElement('button');
           btnAdd.className = 'btn-add-slot no-export mt-auto w-full py-1 text-center text-xs text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/60 rounded border border-dashed border-slate-200 transition';
           btnAdd.innerHTML = '<i class="fa-solid fa-plus text-[10px]"></i> 新增';
-          btnAdd.onclick = () => openSessionModalFor(d.id, slot.id);
+          btnAdd.onclick = function() { openSessionModalFor(d.id, slot.id); };
           container.appendChild(btnAdd);
 
           td.appendChild(container);
@@ -751,13 +772,12 @@
       });
     }
 
-    // 渲染清單
     function renderList() {
       const cur = getCurrentWeek();
       const tbody = document.getElementById('listTableBody');
       tbody.innerHTML = '';
 
-      const sorted = [...(cur.sessions || [])].sort((a, b) => {
+      const sorted = (cur.sessions || []).slice().sort(function(a, b) {
         if (a.date !== b.date) return a.date.localeCompare(b.date);
         return a.timeSlot === 'morning' ? -1 : 1;
       });
@@ -767,90 +787,83 @@
         return;
       }
 
-      sorted.forEach(s => {
+      sorted.forEach(function(s) {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/80 transition';
-        const dateObj = cur.dates.find(d => d.id === s.date);
+        const dateObj = cur.dates.find(function(d) { return d.id === s.date; });
         const dateStr = dateObj ? dateObj.label : s.date;
         const timeSlotLabel = s.timeSlot === 'morning' ? '<span class="text-amber-600 font-semibold">上午</span>' : '<span class="text-blue-600 font-semibold">下午</span>';
         const style = getCategoryStyle(s.category);
 
-        tr.innerHTML = `
-          <td class="py-2.5 px-3 font-medium text-slate-700">${dateStr} ${timeSlotLabel}</td>
-          <td class="py-2.5 px-3">
-            <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold ${style.badgeBg} ${style.badgeText}">${s.category}</span>
-          </td>
-          <td class="py-2.5 px-3 font-semibold text-slate-800">${s.students.join('、')}</td>
-          <td class="py-2.5 px-3 text-indigo-900">${s.teachers.join('、')}</td>
-          <td class="py-2.5 px-3 text-right admin-only no-export">
-            <button onclick="editSession('${s.id}')" class="text-slate-400 hover:text-indigo-600 text-xs px-2 py-1"><i class="fa-solid fa-pen"></i></button>
-            <button onclick="deleteSessionDirect('${s.id}')" class="text-slate-400 hover:text-rose-600 text-xs px-2 py-1"><i class="fa-regular fa-trash-can"></i></button>
-          </td>
-        `;
+        tr.innerHTML = 
+          '<td class="py-2.5 px-3 font-medium text-slate-700">' + dateStr + ' ' + timeSlotLabel + '</td>' +
+          '<td class="py-2.5 px-3">' +
+            '<span class="inline-block px-2 py-0.5 rounded text-xs font-semibold ' + style.badgeBg + ' ' + style.badgeText + '">' + s.category + '</span>' +
+          '</td>' +
+          '<td class="py-2.5 px-3 font-semibold text-slate-800">' + (s.students || []).join('、') + '</td>' +
+          '<td class="py-2.5 px-3 text-indigo-900">' + (s.teachers || []).join('、') + '</td>' +
+          '<td class="py-2.5 px-3 text-right admin-only no-export">' +
+            '<button onclick="editSession(\'' + s.id + '\')" class="text-slate-400 hover:text-indigo-600 text-xs px-2 py-1"><i class="fa-solid fa-pen"></i></button>' +
+            '<button onclick="deleteSessionDirect(\'' + s.id + '\')" class="text-slate-400 hover:text-rose-600 text-xs px-2 py-1"><i class="fa-regular fa-trash-can"></i></button>' +
+          '</td>';
         tbody.appendChild(tr);
       });
     }
 
-    // 渲染統計
     function renderStats() {
       const cur = getCurrentWeek();
       const teacherCounts = {};
       const studentCounts = {};
 
-      teachers.forEach(t => teacherCounts[t] = 0);
-      students.forEach(s => studentCounts[s] = 0);
+      teachers.forEach(function(t) { teacherCounts[t] = 0; });
+      students.forEach(function(s) { studentCounts[s] = 0; });
 
-      (cur.sessions || []).forEach(sess => {
-        sess.teachers.forEach(t => { teacherCounts[t] = (teacherCounts[t] || 0) + 1; });
-        sess.students.forEach(s => { studentCounts[s] = (studentCounts[s] || 0) + 1; });
+      (cur.sessions || []).forEach(function(sess) {
+        (sess.teachers || []).forEach(function(t) { teacherCounts[t] = (teacherCounts[t] || 0) + 1; });
+        (sess.students || []).forEach(function(s) { studentCounts[s] = (studentCounts[s] || 0) + 1; });
       });
 
       const tContainer = document.getElementById('teacherStatsList');
       tContainer.innerHTML = '';
-      Object.entries(teacherCounts).sort((a,b) => b[1] - a[1]).forEach(([name, count]) => {
+      Object.entries(teacherCounts).sort(function(a,b) { return b[1] - a[1]; }).forEach(function(pair) {
         const div = document.createElement('div');
         div.className = 'flex items-center justify-between bg-white p-2 rounded border border-slate-200';
-        div.innerHTML = `
-          <span class="font-medium text-slate-700">${name} 老師</span>
-          <span class="font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">${count} 場</span>
-        `;
+        div.innerHTML = 
+          '<span class="font-medium text-slate-700">' + pair[0] + ' 老師</span>' +
+          '<span class="font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">' + pair[1] + ' 場</span>';
         tContainer.appendChild(div);
       });
 
       const sContainer = document.getElementById('studentStatsList');
       sContainer.innerHTML = '';
-      Object.entries(studentCounts).sort((a,b) => b[1] - a[1]).forEach(([name, count]) => {
+      Object.entries(studentCounts).sort(function(a,b) { return b[1] - a[1]; }).forEach(function(pair) {
         const div = document.createElement('div');
         div.className = 'flex items-center justify-between bg-white p-2 rounded border border-slate-200';
-        div.innerHTML = `
-          <span class="font-medium text-slate-700">${name}</span>
-          <span class="font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">${count} 項評核</span>
-        `;
+        div.innerHTML = 
+          '<span class="font-medium text-slate-700">' + pair[0] + '</span>' +
+          '<span class="font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">' + pair[1] + ' 項評核</span>';
         sContainer.appendChild(div);
       });
     }
 
-    // 渲染教師勾選清單按鈕列
     function renderTeacherFilterGroup() {
       const group = document.getElementById('teacherCheckboxGroup');
       group.innerHTML = '';
 
-      teachers.forEach(t => {
+      teachers.forEach(function(t) {
         const isChecked = selectedTeacherFilters.has(t);
         const label = document.createElement('label');
-        label.className = `cursor-pointer px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 select-none ${
-          isChecked 
+        label.className = 'cursor-pointer px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 select-none ' +
+          (isChecked 
             ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' 
-            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
-        }`;
+            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100');
 
-        label.innerHTML = `
-          <input type="checkbox" value="${t}" class="hidden" ${isChecked ? 'checked' : ''}>
-          <i class="fa-solid ${isChecked ? 'fa-check-circle' : 'fa-circle-notch text-slate-300'} text-xs"></i>
-          <span>${t} 老師</span>
-        `;
+        label.innerHTML = 
+          '<input type="checkbox" value="' + t + '" class="hidden" ' + (isChecked ? 'checked' : '') + '>' +
+          '<i class="fa-solid ' + (isChecked ? 'fa-check-circle' : 'fa-circle-notch text-slate-300') + ' text-xs"></i>' +
+          '<span>' + t + ' 老師</span>';
 
-        label.querySelector('input').addEventListener('change', (e) => {
+        label.querySelector('input').addEventListener('change', function(e) {
           if (e.target.checked) {
             selectedTeacherFilters.add(t);
           } else {
@@ -864,7 +877,6 @@
       });
     }
 
-    // 渲染教師任務彙總卡片 (僅顯示已勾選之教師)
     function renderTeacherWeeklySummary() {
       const cur = getCurrentWeek();
       const container = document.getElementById('teacherSummaryCards');
@@ -878,12 +890,12 @@
         emptyAlert.classList.add('hidden');
       }
 
-      teachers.forEach(teacher => {
+      teachers.forEach(function(teacher) {
         if (!selectedTeacherFilters.has(teacher)) return;
 
         const teacherSessions = (cur.sessions || [])
-          .filter(s => s.teachers.includes(teacher))
-          .sort((a, b) => {
+          .filter(function(s) { return (s.teachers || []).indexOf(teacher) !== -1; })
+          .sort(function(a, b) {
             if (a.date !== b.date) return a.date.localeCompare(b.date);
             return a.timeSlot === 'morning' ? -1 : 1;
           });
@@ -895,53 +907,50 @@
         if (teacherSessions.length === 0) {
           listHtml = '<div class="text-xs text-slate-400 italic py-3 text-center">本週暫無安排評核任務</div>';
         } else {
-          listHtml = `<ul class="space-y-2 mt-2 text-xs">`;
-          teacherSessions.forEach(sess => {
+          listHtml = '<ul class="space-y-2 mt-2 text-xs">';
+          teacherSessions.forEach(function(sess) {
             const timeSlotText = sess.timeSlot === 'morning' ? '早' : '午';
             const style = getCategoryStyle(sess.category);
             const link = getCategoryLink(sess.category);
 
             let badgeHtml = '';
             if (link) {
-              badgeHtml = `
-                <a href="${link}" target="_blank" rel="noopener noreferrer" title="前往填寫表單" class="inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded ${style.badgeBg} ${style.badgeText} hover:opacity-80 underline underline-offset-2 decoration-1 transition">
-                  ${sess.category}
-                  <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-75"></i>
-                </a>
-              `;
+              badgeHtml = 
+                '<a href="' + link + '" target="_blank" rel="noopener noreferrer" title="前往填寫表單" class="inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded ' + style.badgeBg + ' ' + style.badgeText + ' hover:opacity-80 underline underline-offset-2 decoration-1 transition">' +
+                  sess.category +
+                  '<i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-75"></i>' +
+                '</a>';
             } else {
-              badgeHtml = `<span class="font-bold px-1.5 py-0.5 rounded ${style.badgeBg} ${style.badgeText}">${sess.category}</span>`;
+              badgeHtml = '<span class="font-bold px-1.5 py-0.5 rounded ' + style.badgeBg + ' ' + style.badgeText + '">' + sess.category + '</span>';
             }
 
-            listHtml += `
-              <li class="flex flex-col bg-white p-2 rounded border border-slate-200 shadow-2xs">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-medium text-slate-600">${sess.date} (${timeSlotText})</span>
-                  ${badgeHtml}
-                </div>
-                <div class="text-slate-700 flex items-center gap-1">
-                  <span class="text-slate-400">學員：</span>
-                  <span class="font-semibold">${sess.students.join('、')}</span>
-                </div>
-              </li>
-            `;
+            listHtml += 
+              '<li class="flex flex-col bg-white p-2 rounded border border-slate-200 shadow-2xs">' +
+                '<div class="flex items-center justify-between mb-1">' +
+                  '<span class="font-medium text-slate-600">' + sess.date + ' (' + timeSlotText + ')</span>' +
+                  badgeHtml +
+                '</div>' +
+                '<div class="text-slate-700 flex items-center gap-1">' +
+                  '<span class="text-slate-400">學員：</span>' +
+                  '<span class="font-semibold">' + (sess.students || []).join('、') + '</span>' +
+                '</div>' +
+              '</li>';
           });
-          listHtml += `</ul>`;
+          listHtml += '</ul>';
         }
 
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
-              <span class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                <i class="fa-solid fa-user-tie text-indigo-600"></i> ${teacher} 老師
-              </span>
-              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${teacherSessions.length > 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-500'}">
-                ${teacherSessions.length} 場任務
-              </span>
-            </div>
-            ${listHtml}
-          </div>
-        `;
+        card.innerHTML = 
+          '<div>' +
+            '<div class="flex items-center justify-between border-b border-slate-200 pb-2">' +
+              '<span class="font-bold text-slate-900 text-sm flex items-center gap-1.5">' +
+                '<i class="fa-solid fa-user-tie text-indigo-600"></i> ' + teacher + ' 老師' +
+              '</span>' +
+              '<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ' + (teacherSessions.length > 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-500') + '">' +
+                teacherSessions.length + ' 場任務' +
+              '</span>' +
+            '</div>' +
+            listHtml +
+          '</div>';
 
         container.appendChild(card);
       });
@@ -961,7 +970,7 @@
       const cur = getCurrentWeek();
       const modalDateSel = document.getElementById('modalDate');
       modalDateSel.innerHTML = '';
-      cur.dates.forEach(d => {
+      cur.dates.forEach(function(d) {
         const opt = document.createElement('option');
         opt.value = d.id;
         opt.textContent = d.label;
@@ -970,12 +979,15 @@
     }
 
     // ==========================================
-    // 5. 下拉選單與標籤 (Chips)
+    // 5. 新增 / 編輯彈窗與下拉標籤邏輯
     // ==========================================
+    let currentSelectedStudents = [];
+    let currentSelectedTeachers = [];
+
     function updateCategorySelectOptions() {
       const select = document.getElementById('modalCategory');
       select.innerHTML = '';
-      categories.forEach(c => {
+      categories.forEach(function(c) {
         const opt = document.createElement('option');
         opt.value = c;
         opt.textContent = c;
@@ -986,7 +998,7 @@
     function initDropdowns() {
       const sDrop = document.getElementById('studentDropdown');
       sDrop.innerHTML = '<option value="">-- 點擊選擇學員加入 --</option>';
-      students.forEach(s => {
+      students.forEach(function(s) {
         const opt = document.createElement('option');
         opt.value = s;
         opt.textContent = s;
@@ -995,7 +1007,7 @@
 
       const tDrop = document.getElementById('teacherDropdown');
       tDrop.innerHTML = '<option value="">-- 點擊選擇教師加入 --</option>';
-      teachers.forEach(t => {
+      teachers.forEach(function(t) {
         const opt = document.createElement('option');
         opt.value = t;
         opt.textContent = t;
@@ -1006,27 +1018,26 @@
     function renderChips(containerId, list, removeCallback) {
       const container = document.getElementById(containerId);
       container.innerHTML = '';
-      list.forEach((item, idx) => {
+      list.forEach(function(item, idx) {
         const chip = document.createElement('span');
         chip.className = 'inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md text-xs font-medium';
-        chip.innerHTML = `
-          <span>${item}</span>
-          <button type="button" class="text-indigo-400 hover:text-indigo-900 font-bold ml-0.5">&times;</button>
-        `;
-        chip.querySelector('button').onclick = () => removeCallback(idx);
+        chip.innerHTML = 
+          '<span>' + item + '</span>' +
+          '<button type="button" class="text-indigo-400 hover:text-indigo-900 font-bold ml-0.5">&times;</button>';
+        chip.querySelector('button').onclick = function() { removeCallback(idx); };
         container.appendChild(chip);
       });
     }
 
     function refreshStudentChips() {
-      renderChips('selectedStudentsChips', currentSelectedStudents, (idx) => {
+      renderChips('selectedStudentsChips', currentSelectedStudents, function(idx) {
         currentSelectedStudents.splice(idx, 1);
         refreshStudentChips();
       });
     }
 
     function refreshTeacherChips() {
-      renderChips('selectedTeachersChips', currentSelectedTeachers, (idx) => {
+      renderChips('selectedTeachersChips', currentSelectedTeachers, function(idx) {
         currentSelectedTeachers.splice(idx, 1);
         refreshTeacherChips();
       });
@@ -1034,16 +1045,18 @@
 
     const sessionModal = document.getElementById('sessionModal');
 
-    function openSessionModalFor(date, timeSlot) {
+    function openSessionModalFor(targetDate, targetSlot) {
       if (isDisplayMode) return;
       const cur = getCurrentWeek();
       document.getElementById('editSessionId').value = '';
-      document.getElementById('modalTitle').textContent = '新增評核場次';
+      document.getElementById('modalTitle').textContent = '新增評核場次（' + cur.title + '）';
       document.getElementById('btnDeleteSession').classList.add('hidden');
       
       updateModalDateOptions();
-      document.getElementById('modalDate').value = date || cur.dates[0].id;
-      document.getElementById('modalTimeSlot').value = timeSlot;
+
+      const hasDate = cur.dates.some(function(d) { return d.id === targetDate; });
+      document.getElementById('modalDate').value = hasDate ? targetDate : cur.dates[0].id;
+      document.getElementById('modalTimeSlot').value = targetSlot || 'morning';
       document.getElementById('modalCategory').value = categories[0] || 'EPA發藥';
 
       currentSelectedStudents = [];
@@ -1057,7 +1070,7 @@
     window.editSession = function(id) {
       if (isDisplayMode) return;
       const cur = getCurrentWeek();
-      const session = (cur.sessions || []).find(s => s.id === id);
+      const session = (cur.sessions || []).find(function(s) { return s.id === id; });
       if (!session) return;
 
       document.getElementById('editSessionId').value = session.id;
@@ -1069,8 +1082,8 @@
       document.getElementById('modalTimeSlot').value = session.timeSlot;
       document.getElementById('modalCategory').value = session.category;
 
-      currentSelectedStudents = [...session.students];
-      currentSelectedTeachers = [...session.teachers];
+      currentSelectedStudents = (session.students || []).slice();
+      currentSelectedTeachers = (session.teachers || []).slice();
       refreshStudentChips();
       refreshTeacherChips();
 
@@ -1081,7 +1094,7 @@
       if (isDisplayMode) return;
       if (confirm('確定要刪除這筆評核排程嗎？')) {
         const cur = getCurrentWeek();
-        cur.sessions = (cur.sessions || []).filter(s => s.id !== id);
+        cur.sessions = (cur.sessions || []).filter(function(s) { return s.id !== id; });
         saveStorage();
         refreshAllViews();
         showToast('已刪除評核場次');
@@ -1091,14 +1104,14 @@
     // ==========================================
     // 6. 下載圖片 (僅截取總表區域)
     // ==========================================
-    document.getElementById('btnExportImage').addEventListener('click', async () => {
+    document.getElementById('btnExportImage').addEventListener('click', async function() {
       const tableArea = document.getElementById('scheduleTableCaptureArea');
       tableArea.classList.add('is-exporting');
 
       showToast('正在產生排程總表圖片...');
 
       try {
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise(function(resolve) { setTimeout(resolve, 150); });
 
         const canvas = await html2canvas(tableArea, {
           scale: 2,
@@ -1109,7 +1122,7 @@
 
         const cur = getCurrentWeek();
         const link = document.createElement('a');
-        link.download = `${cur.title || '臨床評核排程表'}.png`;
+        link.download = (cur.title || '臨床評核排程表') + '.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
         showToast('排程總表圖片已下載！');
@@ -1122,25 +1135,23 @@
     });
 
     // 匯出 CSV
-    document.getElementById('btnExportCSV').addEventListener('click', () => {
+    document.getElementById('btnExportCSV').addEventListener('click', function() {
       const cur = getCurrentWeek();
-      let csvContent = '﻿週次,日期,時段,評核項目,受評學員(PGY),評核教師
-';
-      (cur.sessions || []).forEach(s => {
-        const dateObj = cur.dates.find(d => d.id === s.date);
+      const csvLines = ['﻿週次,日期,時段,評核項目,受評學員(PGY),評核教師'];
+      (cur.sessions || []).forEach(function(s) {
+        const dateObj = cur.dates.find(function(d) { return d.id === s.date; });
         const dateStr = dateObj ? dateObj.label : s.date;
         const slotStr = s.timeSlot === 'morning' ? '上午' : '下午';
-        const studStr = `"${s.students.join('、')}"`;
-        const teachStr = `"${s.teachers.join('、')}"`;
-        csvContent += `"${cur.title}",${dateStr},${slotStr},${s.category},${studStr},${teachStr}
-`;
+        const studStr = '"' + (s.students || []).join('、') + '"';
+        const teachStr = '"' + (s.teachers || []).join('、') + '"';
+        csvLines.push('"' + cur.title + '",' + dateStr + ',' + slotStr + ',' + s.category + ',' + studStr + ',' + teachStr);
       });
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `${cur.title || '評核排程'}.csv`);
+      link.setAttribute('download', (cur.title || '評核排程') + '.csv');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -1157,51 +1168,55 @@
       const cur = getCurrentWeek();
       const payload = {
         currentWeek: cur,
-        teachers,
-        students
+        teachers: teachers,
+        students: students
       };
       const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
       const currentUrl = window.location.origin + window.location.pathname;
-      return `${currentUrl}#view=display&data=${encoded}`;
+      return currentUrl + '#view=display&data=' + encoded;
     }
 
-    document.getElementById('btnOpenShareModal').addEventListener('click', () => {
+    document.getElementById('btnOpenShareModal').addEventListener('click', function() {
       const url = generateDisplayUrl();
       shareInput.value = url;
       shareModal.classList.remove('hidden');
     });
 
-    document.getElementById('btnCloseShareModal').onclick = () => shareModal.classList.add('hidden');
-    document.getElementById('btnDismissShareModal').onclick = () => shareModal.classList.add('hidden');
+    document.getElementById('btnCloseShareModal').onclick = function() { shareModal.classList.add('hidden'); };
+    document.getElementById('btnDismissShareModal').onclick = function() { shareModal.classList.add('hidden'); };
 
-    document.getElementById('btnCopyShareUrl').addEventListener('click', () => {
+    document.getElementById('btnCopyShareUrl').addEventListener('click', function() {
       shareInput.select();
-      navigator.clipboard.writeText(shareInput.value).then(() => {
+      navigator.clipboard.writeText(shareInput.value).then(function() {
         showToast('展示版專用網址已複製到剪貼簿！');
-      }).catch(() => {
+      }).catch(function() {
         document.execCommand('copy');
         showToast('已複製！');
       });
     });
 
-    document.getElementById('btnPreviewShareUrl').addEventListener('click', () => {
+    document.getElementById('btnPreviewShareUrl').addEventListener('click', function() {
       window.open(shareInput.value, '_blank');
     });
 
-    document.getElementById('btnSwitchToAdmin').addEventListener('click', () => {
+    document.getElementById('btnSwitchToAdmin').addEventListener('click', function() {
+      history.pushState("", document.title, window.location.pathname + window.location.search);
       window.location.hash = '';
+      isDisplayMode = false;
+      checkUrlMode();
+      refreshAllViews();
       window.location.reload();
     });
 
     // ==========================================
-    // 8. 初始化與事件監聽
+    // 8. 初始化與所有事件監聽
     // ==========================================
-    window.addEventListener('hashchange', () => {
+    window.addEventListener('hashchange', function() {
       checkUrlMode();
       refreshAllViews();
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', function() {
       loadStorage();
       checkUrlMode();
       initDropdowns();
@@ -1209,29 +1224,29 @@
       syncInputsFromCurrentWeek();
       refreshAllViews();
 
-      // 切換週次
-      document.getElementById('weekSelector').addEventListener('change', (e) => {
+      // 切換歷史週次
+      document.getElementById('weekSelector').addEventListener('change', function(e) {
         currentWeekId = e.target.value;
         saveStorage();
         syncInputsFromCurrentWeek();
         refreshAllViews();
-        showToast('已切換至所選週次！');
+        showToast('已切換至「' + getCurrentWeek().title + '」！');
       });
 
       // 建立新的一週
-      document.getElementById('btnCreateNewWeek').addEventListener('click', () => {
+      document.getElementById('btnCreateNewWeek').addEventListener('click', function() {
         createNewWeek();
       });
 
       // 刪除目前週次
-      document.getElementById('btnDeleteCurrentWeek').addEventListener('click', () => {
+      document.getElementById('btnDeleteCurrentWeek').addEventListener('click', function() {
         if (weeksStore.length <= 1) {
           alert('至少需要保留一週的排程紀錄，無法刪除！');
           return;
         }
         const cur = getCurrentWeek();
-        if (confirm(`確定要刪除「${cur.title}」的排程紀錄嗎？此動作無法復原。`)) {
-          weeksStore = weeksStore.filter(w => w.id !== currentWeekId);
+        if (confirm('確定要刪除「' + cur.title + '」的排程紀錄嗎？')) {
+          weeksStore = weeksStore.filter(function(w) { return w.id !== currentWeekId; });
           currentWeekId = weeksStore[0].id;
           saveStorage();
           syncInputsFromCurrentWeek();
@@ -1242,23 +1257,23 @@
       });
 
       // 自選起始週一日期 (動態計算 5 天時段)
-      document.getElementById('weekStartDatePicker').addEventListener('change', (e) => {
+      document.getElementById('weekStartDatePicker').addEventListener('change', function(e) {
         const dateVal = e.target.value;
         if (!dateVal) return;
         const cur = getCurrentWeek();
         cur.startDate = dateVal;
         cur.dates = computeWeekDaysFromMonday(dateVal);
-        cur.title = `${cur.dates[0].id} - ${cur.dates[4].id} 評核排程`;
+        cur.title = cur.dates[0].id + ' - ' + cur.dates[4].id + ' 評核排程';
         
         saveStorage();
         syncInputsFromCurrentWeek();
         updateWeekSelectorUI();
         refreshAllViews();
-        showToast(`已更新為 ${cur.title}！`);
+        showToast('已更新日期為 ' + cur.title + '！');
       });
 
       // 修改週名稱標題
-      document.getElementById('weekTitleInput').addEventListener('input', (e) => {
+      document.getElementById('weekTitleInput').addEventListener('input', function(e) {
         const cur = getCurrentWeek();
         cur.title = e.target.value;
         document.getElementById('displayWeekTitle').textContent = e.target.value;
@@ -1275,46 +1290,69 @@
       const statsBox = document.getElementById('statsViewContainer');
 
       function switchTab(activeBtn, showBox) {
-        [tabCal, tabList, tabStats].forEach(b => {
+        [tabCal, tabList, tabStats].forEach(function(b) {
           b.className = 'px-3 py-1.5 rounded-md hover:text-slate-900 transition';
         });
         activeBtn.className = 'px-3 py-1.5 rounded-md bg-white text-indigo-700 font-semibold shadow-sm transition';
-        [calBox, listBox, statsBox].forEach(box => box.classList.add('hidden'));
+        [calBox, listBox, statsBox].forEach(function(box) { box.classList.add('hidden'); });
         showBox.classList.remove('hidden');
       }
 
-      tabCal.onclick = () => switchTab(tabCal, calBox);
-      tabList.onclick = () => switchTab(tabList, listBox);
-      tabStats.onclick = () => switchTab(tabStats, statsBox);
+      tabCal.onclick = function() { switchTab(tabCal, calBox); };
+      tabList.onclick = function() { switchTab(tabList, listBox); };
+      tabStats.onclick = function() { switchTab(tabStats, statsBox); };
 
-      // 下拉標籤加入
-      document.getElementById('btnAddStudentTag').onclick = () => {
-        const val = document.getElementById('studentDropdown').value;
-        if (val && !currentSelectedStudents.includes(val)) {
+      // 下拉選擇學員自動加入
+      const sDrop = document.getElementById('studentDropdown');
+      function addStudent() {
+        const val = sDrop.value;
+        if (val && currentSelectedStudents.indexOf(val) === -1) {
           currentSelectedStudents.push(val);
           refreshStudentChips();
         }
-      };
+        sDrop.value = '';
+      }
+      sDrop.addEventListener('change', addStudent);
+      document.getElementById('btnAddStudentTag').onclick = addStudent;
 
-      document.getElementById('btnAddTeacherTag').onclick = () => {
-        const val = document.getElementById('teacherDropdown').value;
-        if (val && !currentSelectedTeachers.includes(val)) {
+      // 下拉選擇教師自動加入
+      const tDrop = document.getElementById('teacherDropdown');
+      function addTeacher() {
+        const val = tDrop.value;
+        if (val && currentSelectedTeachers.indexOf(val) === -1) {
           currentSelectedTeachers.push(val);
           refreshTeacherChips();
         }
+        tDrop.value = '';
+      }
+      tDrop.addEventListener('change', addTeacher);
+      document.getElementById('btnAddTeacherTag').onclick = addTeacher;
+
+      // 點擊頂部「新增評核場次」按鈕
+      document.getElementById('btnNewSession').onclick = function() {
+        const cur = getCurrentWeek();
+        openSessionModalFor(cur.dates[0].id, 'morning');
       };
 
-      document.getElementById('btnNewSession').onclick = () => openSessionModalFor('', 'morning');
-      document.getElementById('btnCloseModal').onclick = () => sessionModal.classList.add('hidden');
-      document.getElementById('btnCancelModal').onclick = () => sessionModal.classList.add('hidden');
+      document.getElementById('btnCloseModal').onclick = function() { sessionModal.classList.add('hidden'); };
+      document.getElementById('btnCancelModal').onclick = function() { sessionModal.classList.add('hidden'); };
 
-      document.getElementById('sessionForm').onsubmit = (e) => {
+      // 提交儲存評核場次
+      document.getElementById('sessionForm').onsubmit = function(e) {
         e.preventDefault();
         const cur = getCurrentWeek();
         const editId = document.getElementById('editSessionId').value;
         const date = document.getElementById('modalDate').value;
         const timeSlot = document.getElementById('modalTimeSlot').value;
         const category = document.getElementById('modalCategory').value;
+
+        // 若目前選單有停留人名但尚未點加入，自動納入
+        if (sDrop.value && currentSelectedStudents.indexOf(sDrop.value) === -1) {
+          currentSelectedStudents.push(sDrop.value);
+        }
+        if (tDrop.value && currentSelectedTeachers.indexOf(tDrop.value) === -1) {
+          currentSelectedTeachers.push(tDrop.value);
+        }
 
         if (currentSelectedStudents.length === 0) {
           alert('請至少選擇一位受評學員');
@@ -1325,35 +1363,42 @@
           return;
         }
 
-        if (!cur.sessions) cur.sessions = [];
+        if (!Array.isArray(cur.sessions)) cur.sessions = [];
 
         if (editId) {
-          const idx = cur.sessions.findIndex(s => s.id === editId);
+          const idx = cur.sessions.findIndex(function(s) { return s.id === editId; });
           if (idx !== -1) {
-            cur.sessions[idx] = { id: editId, date, timeSlot, category, students: [...currentSelectedStudents], teachers: [...currentSelectedTeachers] };
+            cur.sessions[idx] = { 
+              id: editId, 
+              date: date, 
+              timeSlot: timeSlot, 
+              category: category, 
+              students: currentSelectedStudents.slice(), 
+              teachers: currentSelectedTeachers.slice() 
+            };
           }
         } else {
           cur.sessions.push({
             id: 's_' + Date.now(),
-            date,
-            timeSlot,
-            category,
-            students: [...currentSelectedStudents],
-            teachers: [...currentSelectedTeachers]
+            date: date,
+            timeSlot: timeSlot,
+            category: category,
+            students: currentSelectedStudents.slice(),
+            teachers: currentSelectedTeachers.slice()
           });
         }
 
         saveStorage();
         sessionModal.classList.add('hidden');
         refreshAllViews();
-        showToast(editId ? '評核場次已修改' : '已成功新增評核場次');
+        showToast(editId ? '評核場次已修改' : '已成功新增評核場次至當前週！');
       };
 
-      document.getElementById('btnDeleteSession').onclick = () => {
+      document.getElementById('btnDeleteSession').onclick = function() {
         const editId = document.getElementById('editSessionId').value;
         const cur = getCurrentWeek();
         if (editId && confirm('確定要刪除這筆評核排程嗎？')) {
-          cur.sessions = cur.sessions.filter(s => s.id !== editId);
+          cur.sessions = (cur.sessions || []).filter(function(s) { return s.id !== editId; });
           saveStorage();
           sessionModal.classList.add('hidden');
           refreshAllViews();
@@ -1362,13 +1407,13 @@
       };
 
       // 教師過濾按鈕全選 / 清空
-      document.getElementById('btnSelectAllTeachers').onclick = () => {
-        teachers.forEach(t => selectedTeacherFilters.add(t));
+      document.getElementById('btnSelectAllTeachers').onclick = function() {
+        teachers.forEach(function(t) { selectedTeacherFilters.add(t); });
         renderTeacherFilterGroup();
         renderTeacherWeeklySummary();
       };
 
-      document.getElementById('btnClearTeachers').onclick = () => {
+      document.getElementById('btnClearTeachers').onclick = function() {
         selectedTeacherFilters.clear();
         renderTeacherFilterGroup();
         renderTeacherWeeklySummary();
@@ -1376,18 +1421,19 @@
 
       // 名單設定
       const configModal = document.getElementById('configModal');
-      document.getElementById('btnOpenConfig').onclick = () => {
+      document.getElementById('btnOpenConfig').onclick = function() {
         document.getElementById('configTeachersInput').value = teachers.join('、');
         document.getElementById('configStudentsInput').value = students.join('、');
         document.getElementById('configCategoriesInput').value = categories.join(',');
         configModal.classList.remove('hidden');
       };
-      document.getElementById('btnCloseConfigModal').onclick = () => configModal.classList.add('hidden');
-      document.getElementById('btnCancelConfig').onclick = () => configModal.classList.add('hidden');
+      document.getElementById('btnCloseConfigModal').onclick = function() { configModal.classList.add('hidden'); };
+      document.getElementById('btnCancelConfig').onclick = function() { configModal.classList.add('hidden'); };
 
-      document.getElementById('btnSaveConfig').onclick = () => {
-        const parseList = (str) => str.split(/[,，、\s
-]+/).map(s => s.trim()).filter(Boolean);
+      document.getElementById('btnSaveConfig').onclick = function() {
+        function parseList(str) {
+          return str.split(/[,，、\s\n]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+        }
 
         const newTeachers = parseList(document.getElementById('configTeachersInput').value);
         const newStudents = parseList(document.getElementById('configStudentsInput').value);
@@ -1408,7 +1454,7 @@
       const btnRefresh = document.getElementById('btnFloatingRefresh');
       const refreshIcon = document.getElementById('floatingRefreshIcon');
 
-      btnRefresh.onclick = () => {
+      btnRefresh.onclick = function() {
         refreshIcon.classList.remove('animate-spin-custom');
         void refreshIcon.offsetWidth;
         refreshIcon.classList.add('animate-spin-custom');
@@ -1418,7 +1464,7 @@
         updateWeekSelectorUI();
         syncInputsFromCurrentWeek();
         refreshAllViews();
-        showToast('名單與評核表已即時更新完成！');
+        showToast('名單與排程資料已重整完畢！');
       };
     });
   </script>
