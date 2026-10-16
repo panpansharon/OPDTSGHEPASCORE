@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>臨床藥學評核排班系統</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 圖示 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- html2canvas 用於生成並下載圖片 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #f8fafc;
+    }
+    
+    /* 匯出截圖時隱藏不需要的互動元素與提示 */
+    .is-exporting .no-export,
+    .is-exporting .btn-add-slot,
+    .is-exporting .card-action-btn,
+    .is-exporting .hint-banner {
+      display: none !important;
+    }
+    
+    .is-exporting .empty-slot-placeholder {
+      display: none !important;
+    }
+
+    /* 展示模式 (Display Mode / 唯讀) 專用樣式隱藏 */
+    body.is-display-mode .admin-only,
+    body.is-display-mode .btn-add-slot,
+    body.is-display-mode .card-action-btn,
+    body.is-display-mode .hint-banner,
+    body.is-display-mode #btnFloatingRefresh {
+      display: none !important;
+    }
+
+    /* 列印最佳化 */
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background: white;
+      }
+    }
+
+    /* 懸浮旋轉動畫 */
+    @keyframes spin-once {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-custom {
+      animation: spin-once 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased pb-28">
+
+  <!-- 頂部導航列 -->
+  <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-30 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="bg-indigo-700/80 px-2.5 py-1 rounded text-xs font-mono font-bold tracking-wider text-indigo-200">EPA & DOPS</span>
+        <h1 class="text-lg md:text-xl font-bold tracking-tight">臨床評核排班管理系統</h1>
+        <span id="displayModeBadge" class="hidden text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-medium">展示版 (唯讀模式)</span>
+      </div>
+      <div class="flex items-center flex-wrap gap-2 text-sm">
+        
+        <!-- 展示模式切回後台管理按鈕 -->
+        <button id="btnSwitchToAdmin" class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-md transition font-medium border border-slate-600">
+          <i class="fa-solid fa-lock text-xs text-amber-400"></i> 返回後台管理
+        </button>
+
+        <!-- 展示版專屬連結生成鍵 (admin-only) -->
+        <button id="btnOpenShareModal" class="admin-only inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-md transition font-medium shadow-sm">
+          <i class="fa-solid fa-share-nodes text-xs"></i> 展示版連結
+        </button>
+
+        <!-- 名單設定 (admin-only) -->
+        <button id="btnOpenConfig" class="admin-only inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 hover:bg-indigo-700 text-indigo-100 rounded-md transition font-medium border border-indigo-700/60">
+          <i class="fa-solid fa-sliders text-xs"></i> 名單設定
+        </button>
+
+        <button id="btnExportCSV" class="admin-only inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-md transition font-medium border border-slate-700">
+          <i class="fa-solid fa-file-csv text-xs text-emerald-400"></i> 匯出 CSV
+        </button>
+
+        <!-- 下載排班圖片按鈕 (僅下載週總表) -->
+        <button id="btnExportImage" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md transition font-medium shadow-sm">
+          <i class="fa-solid fa-image text-xs"></i> 下載排班圖片
+        </button>
+
+        <button id="btnNewSession" class="admin-only inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md transition font-medium shadow-sm ml-1">
+          <i class="fa-solid fa-plus text-xs"></i> 新增評核場次
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主內容容器 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+
+    <!-- 週次管理與日期切換面板 -->
+    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 mb-5 flex flex-wrap items-center justify-between gap-4 no-print">
+      
+      <!-- 左側：週次切換與新建週表 -->
+      <div class="flex items-center flex-wrap gap-2.5">
+        <div class="flex items-center gap-1.5">
+          <label class="text-xs font-bold text-slate-500 flex items-center gap-1">
+            <i class="fa-solid fa-folder-open text-indigo-500"></i> 當前週次：
+          </label>
+          <select id="weekSelector" class="bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[180px]">
+          </select>
+        </div>
+
+        <button id="btnCreateNewWeek" class="admin-only inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold shadow-2xs transition">
+          <i class="fa-solid fa-calendar-plus"></i> 新建一週排班表
+        </button>
+
+        <button id="btnDeleteCurrentWeek" class="admin-only inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded text-xs font-medium border border-rose-200 transition" title="刪除目前選取的週次紀錄">
+          <i class="fa-regular fa-trash-can"></i> 刪除此週
+        </button>
+      </div>
+
+      <!-- 右側：自選日期設定時段 (以週為單位) -->
+      <div class="flex items-center flex-wrap gap-3">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-medium text-slate-500">設定起始週一：</span>
+          <input type="date" id="weekStartDatePicker" class="admin-only bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-medium text-slate-500">週名稱：</span>
+          <input type="text" id="weekTitleInput" value="10/05 - 10/09 評核排程" class="bg-white border border-slate-300 rounded px-2.5 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 檢視模式切換列 -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-4 no-print">
+      <div class="text-xs text-slate-500 flex items-center gap-1.5">
+        <i class="fa-solid fa-clock-rotate-left text-indigo-500"></i>
+        <span>所有週次排程均會自動永久保留在瀏覽器中，隨時由左上方「當前週次」切換或新建。</span>
+      </div>
+
+      <div class="flex items-center gap-1 bg-slate-200 p-1 rounded-lg text-xs font-medium text-slate-600">
+        <button id="tabCalendar" class="px-3 py-1.5 rounded-md bg-white text-indigo-700 font-semibold shadow-sm transition">
+          <i class="fa-solid fa-calendar-week mr-1"></i> 週曆檢視
+        </button>
+        <button id="tabList" class="px-3 py-1.5 rounded-md hover:text-slate-900 transition">
+          <i class="fa-solid fa-list-ul mr-1"></i> 清單檢視
+        </button>
+        <button id="tabStats" class="admin-only px-3 py-1.5 rounded-md hover:text-slate-900 transition">
+          <i class="fa-solid fa-chart-pie mr-1"></i> 負荷統計
+        </button>
+      </div>
+    </div>
+
+    <!-- 區塊一：排程總表 (截圖時僅截取此節點) -->
+    <div id="scheduleTableCaptureArea" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-8">
+      
+      <!-- 標頭展示區 -->
+      <div class="border-b border-slate-200 pb-4 mb-5 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <span class="text-xs uppercase tracking-wider font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">Schedule Board</span>
+          <h2 id="displayWeekTitle" class="text-xl md:text-2xl font-bold text-slate-900 mt-1">10/05 - 10/09 評核排程總表</h2>
+        </div>
+        <div class="hint-banner text-xs text-slate-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info text-blue-500"></i>
+          <span>點擊格子中的「＋新增」即可直接為該時段排入評核</span>
+        </div>
+      </div>
+
+      <!-- 檢視1：週曆表格 (Calendar View) -->
+      <div id="calendarViewContainer" class="overflow-x-auto">
+        <table class="w-full border-collapse border border-slate-300 text-sm">
+          <thead>
+            <tr id="calendarHeaderRow" class="bg-slate-100 text-slate-700 text-center font-semibold">
+              <th class="border border-slate-300 px-3 py-3 w-20 bg-slate-200/70">時段</th>
+            </tr>
+          </thead>
+          <tbody id="calendarTableBody">
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 檢視2：清單檢視 (List View) -->
+      <div id="listViewContainer" class="hidden overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 text-slate-500 text-xs uppercase bg-slate-50">
+              <th class="py-3 px-3">日期 / 時段</th>
+              <th class="py-3 px-3">評核項目</th>
+              <th class="py-3 px-3">受評學員 (PGY)</th>
+              <th class="py-3 px-3">評核教師</th>
+              <th class="py-3 px-3 text-right admin-only no-export">操作</th>
+            </tr>
+          </thead>
+          <tbody id="listTableBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+
+      <!-- 檢視3：負荷統計 (Stats View) -->
+      <div id="statsViewContainer" class="hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="border border-slate-200 rounded-lg p-4 bg-slate-50/50">
+            <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
+              <i class="fa-solid fa-user-doctor text-indigo-600"></i> 教師本週評核場次統計
+            </h3>
+            <div id="teacherStatsList" class="space-y-2 text-xs"></div>
+          </div>
+          <div class="border border-slate-200 rounded-lg p-4 bg-slate-50/50">
+            <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
+              <i class="fa-solid fa-graduation-cap text-emerald-600"></i> 學員本週受評次數統計
+            </h3>
+            <div id="studentStatsList" class="space-y-2 text-xs"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 區塊二：教師每週評核任務彙總 (截圖時完全排除) -->
+    <div id="teacherSummarySection" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 mb-8">
+      
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-5 bg-indigo-600 rounded"></div>
+          <h3 class="text-base md:text-lg font-bold text-slate-800">教師每週評核任務彙總</h3>
+          <span class="text-xs text-slate-400 font-normal">（點擊項目可直接跳轉至線上表單）</span>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+          <button id="btnSelectAllTeachers" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded transition">全選</button>
+          <button id="btnClearTeachers" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded transition">清空</button>
+        </div>
+      </div>
+
+      <!-- 教師名字勾選過濾列 -->
+      <div class="mb-5 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+        <div class="text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-filter text-indigo-500"></i> 請勾選教師姓名以顯示個人每週任務：
+        </div>
+        <div id="teacherCheckboxGroup" class="flex flex-wrap gap-2 text-xs">
+        </div>
+      </div>
+
+      <!-- 教師個人任務卡片展示區 -->
+      <div id="teacherSummaryCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      </div>
+
+      <div id="noTeacherSelectedAlert" class="hidden text-center py-8 text-slate-400 text-sm">
+        <i class="fa-regular fa-hand-pointer mr-1"></i> 請於上方勾選欲查閱任務的教師姓名
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- 左下角懸浮即時重整鍵 (Floating Refresh Button) -->
+  <div class="fixed bottom-6 left-6 z-40 flex items-center gap-2 no-print">
+    <button id="btnFloatingRefresh" title="即時重新渲染畫面並重整名單" class="flex items-center gap-2 px-4 py-2.5 bg-slate-900/90 hover:bg-slate-900 text-white rounded-full shadow-lg hover:shadow-xl backdrop-blur-sm border border-slate-700/60 transition-all active:scale-95 group text-sm font-medium">
+      <i id="floatingRefreshIcon" class="fa-solid fa-arrows-rotate text-emerald-400 transition-transform group-hover:rotate-180"></i>
+      <span>即時重整名單與排程</span>
+    </button>
+  </div>
+
+  <!-- 彈出視窗 1：分享展示版專屬獨立連結 Modal -->
+  <div id="shareLinkModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+      <div class="bg-purple-900 text-white px-5 py-4 flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-link text-purple-300"></i> 展示版專屬獨立連結
+        </h3>
+        <button id="btnCloseShareModal" class="text-purple-200 hover:text-white text-xl">&times;</button>
+      </div>
+      <div class="p-5 space-y-4 text-sm">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          此連結為<strong>純唯讀展示模式</strong>，排程總表不可新增/修改，且已完整鎖定當前這週的排班資料，適合直接複製並傳送到 LINE 或公佈群組：
+        </p>
+
+        <div class="flex items-center gap-2">
+          <input type="text" id="shareUrlInput" readonly class="w-full bg-slate-50 border border-slate-300 rounded-md p-2.5 text-xs text-slate-700 font-mono focus:outline-none select-all">
+          <button id="btnCopyShareUrl" class="shrink-0 px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-md text-xs shadow-sm transition flex items-center gap-1.5">
+            <i class="fa-regular fa-copy"></i> 複製連結
+          </button>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 space-y-1">
+          <div class="font-bold flex items-center gap-1"><i class="fa-solid fa-circle-info"></i> 展示版特色：</div>
+          <ul class="list-disc list-inside space-y-0.5 text-amber-700">
+            <li>排班總表格完全唯讀（無新增/編輯按鈕）。</li>
+            <li>下方教師任務僅在勾選教師姓名時展開，直通 EPA/DOPS 表單。</li>
+          </ul>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button id="btnPreviewShareUrl" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded font-medium">在新分頁開啟測試</button>
+          <button id="btnDismissShareModal" class="px-3.5 py-1.5 bg-slate-800 text-white text-xs rounded font-medium">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 彈出視窗 2：新增 / 編輯場次 Modal (僅後台版使用) -->
+  <div id="sessionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+      <div class="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 id="modalTitle" class="font-bold text-slate-800 text-base">新增評核場次</h3>
+        <button id="btnCloseModal" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+      <form id="sessionForm" class="p-5 space-y-4 text-sm">
+        <input type="hidden" id="editSessionId">
+        
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">評核日期 (自動對應當前週)</label>
+            <select id="modalDate" class="w-full border border-slate-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white">
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">時段</label>
+            <select id="modalTimeSlot" class="w-full border border-slate-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white">
+              <option value="morning">上午 (早)</option>
+              <option value="afternoon">下午 (午)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">評核項目</label>
+          <select id="modalCategory" class="w-full border border-slate-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white">
+          </select>
+        </div>
+
+        <!-- 學員選擇 -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">受評學員 (PGY) - 點選直接加入</label>
+          <div class="flex gap-2">
+            <select id="studentDropdown" class="flex-1 border border-slate-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+              <option value="">-- 點擊選擇學員加入 --</option>
+            </select>
+            <button type="button" id="btnAddStudentTag" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md text-xs font-medium text-slate-700">加入</button>
+          </div>
+          <div id="selectedStudentsChips" class="flex flex-wrap gap-1.5 mt-2 min-h-[30px] p-2 bg-slate-50 border border-slate-200 rounded-md"></div>
+        </div>
+
+        <!-- 評核老師選擇 -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">評核教師 - 點選直接加入</label>
+          <div class="flex gap-2">
+            <select id="teacherDropdown" class="flex-1 border border-slate-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+              <option value="">-- 點擊選擇教師加入 --</option>
+            </select>
+            <button type="button" id="btnAddTeacherTag" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md text-xs font-medium text-slate-700">加入</button>
+          </div>
+          <div id="selectedTeachersChips" class="flex flex-wrap gap-1.5 mt-2 min-h-[30px] p-2 bg-slate-50 border border-slate-200 rounded-md"></div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <button type="button" id="btnDeleteSession" class="text-rose-600 hover:text-rose-700 font-medium text-xs px-2 py-1 hidden">
+            <i class="fa-regular fa-trash-can mr-1"></i> 刪除此場次
+          </button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" id="btnCancelModal" class="px-3 py-1.5 border border-slate-300 text-slate-600 rounded-md hover:bg-slate-100">取消</button>
+            <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md font-medium shadow-sm">儲存送出</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 彈出視窗 3：名單與項目設定 Modal -->
+  <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+      <div class="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fa-solid fa-user-pen text-indigo-600"></i> 名單名冊設定
+        </h3>
+        <button id="btnCloseConfigModal" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">評核教師名冊 (以頓號或逗號隔開)</label>
+          <textarea id="configTeachersInput" rows="3" class="w-full border border-slate-300 rounded p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"></textarea>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">PGY 學員名冊 (以頓號或逗號隔開)</label>
+          <textarea id="configStudentsInput" rows="3" class="w-full border border-slate-300 rounded p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"></textarea>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">評核項目設定 (以逗號隔開)</label>
+          <input type="text" id="configCategoriesInput" class="w-full border border-slate-300 rounded p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
+          <button id="btnCancelConfig" class="px-3 py-1.5 border border-slate-300 text-slate-600 rounded hover:bg-slate-100">取消</button>
+          <button id="btnSaveConfig" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-medium shadow-sm">儲存並即時重整</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示 Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-lg shadow-xl opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-2">
+    <i class="fa-solid fa-check text-emerald-400"></i>
+    <span id="toastMsg">通知訊息</span>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. 各項評核專屬表單 / 系統超連結設定
+    // ==========================================
+    const EVALUATION_LINKS = {
+      'EPA發藥': 'https://docs.google.com/forms/d/e/1FAIpQLSfNnVcWIBGOqpYGAS7r2U_puBsiSujMK32bqd6MOSUCqw3_0Q/viewform?usp=header',
+      'EPA覆核': 'https://docs.google.com/forms/d/e/1FAIpQLSf2TF9p1V2tQnEULziYYFDLcli47vtJmH7-G4SrHQNix3Czdg/viewform?usp=header',
+      'DOPS調劑(CEPO)': 'https://cts.tsgh.ndmctsgh.edu.tw/',
+      'EPA外用': 'https://docs.google.com/forms/d/e/1FAIpQLSdNCB59ON64s2rflPTjuj_5-SIhpMRUwh7wPL9MzMNoEOVT-Q/viewform?usp=header'
+    };
+
+    const CATEGORY_STYLES = {
+      'EPA發藥': { badgeBg: 'bg-amber-100', badgeText: 'text-amber-800', border: 'border-amber-300' },
+      'EPA覆核': { badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-800', border: 'border-emerald-300' },
+      'DOPS調劑(CEPO)': { badgeBg: 'bg-blue-100', badgeText: 'text-blue-800', border: 'border-blue-300' },
+      'EPA外用': { badgeBg: 'bg-purple-100', badgeText: 'text-purple-800', border: 'border-purple-300' }
+    };
+
+    // ==========================================
+    // 2. 歷週資料庫架構 (以週為單位留存紀錄)
+    // ==========================================
+    let isDisplayMode = false;
+    let selectedTeacherFilters = new Set();
+
+    let teachers = ['丞凱', '著憶', '芯瑜', '立梅', '俐安', '馥瑄'];
+    let students = ['逸賢', '舒婷', '聖峰', '炤宇', '皓勛', '士軒', '映萱', '品臻', '瑋曈', '宜靖', '蓁均', '妤倢', '瑜軒', '妤柔'];
+    let categories = ['EPA發藥', 'EPA覆核', 'DOPS調劑(CEPO)', 'EPA外用'];
+
+    const defaultSampleWeek = {
+      id: 'week_20261005',
+      title: '10/05 - 10/09 評核排程',
+      startDate: '2026-10-05',
+      dates: [
+        { id: '10/05', label: '10/05 (一)' },
+        { id: '10/06', label: '10/06 (二)' },
+        { id: '10/07', label: '10/07 (三)' },
+        { id: '10/08', label: '10/08 (四)' },
+        { id: '10/09', label: '10/09 (五)' },
+      ],
+      sessions: [
+        { id: 's1', date: '10/06', timeSlot: 'afternoon', category: 'EPA覆核', students: ['皓勛', '映萱'], teachers: ['俐安', '著憶', '芯瑜'] },
+        { id: 's2', date: '10/06', timeSlot: 'afternoon', category: 'DOPS調劑(CEPO)', students: ['品臻', '瑋曈', '宜靖'], teachers: ['俐安', '著憶'] },
+        { id: 's3', date: '10/06', timeSlot: 'afternoon', category: 'EPA外用', students: ['妤柔'], teachers: ['俐安', '著憶'] },
+        { id: 's4', date: '10/07', timeSlot: 'morning', category: 'EPA發藥', students: ['逸賢'], teachers: ['丞凱', '著憶'] },
+        { id: 's5', date: '10/07', timeSlot: 'morning', category: 'EPA覆核', students: ['舒婷'], teachers: ['丞凱', '著憶'] },
+        { id: 's6', date: '10/07', timeSlot: 'afternoon', category: 'EPA發藥', students: ['炤宇', '皓勛'], teachers: ['丞凱', '馥瑄'] },
+        { id: 's7', date: '10/07', timeSlot: 'afternoon', category: 'DOPS調劑(CEPO)', students: ['蓁均', '妤倢', '瑜軒'], teachers: ['丞凱', '馥瑄'] },
+        { id: 's8', date: '10/07', timeSlot: 'afternoon', category: 'EPA外用', students: ['宜靖'], teachers: ['丞凱', '馥瑄'] },
+        { id: 's9', date: '10/08', timeSlot: 'morning', category: 'EPA覆核', students: ['聖峰'], teachers: ['丞凱', '芯瑜', '著憶'] },
+        { id: 's10', date: '10/08', timeSlot: 'afternoon', category: 'EPA發藥', students: ['士軒'], teachers: ['俐安', '馥瑄'] },
+        { id: 's11', date: '10/08', timeSlot: 'afternoon', category: 'DOPS調劑(CEPO)', students: ['妤柔', '逸賢'], teachers: ['俐安', '馥瑄'] },
+        { id: 's12', date: '10/08', timeSlot: 'afternoon', category: 'EPA外用', students: ['蓁均', '舒婷', '妤倢'], teachers: ['俐安', '馥瑄'] },
+        { id: 's13', date: '10/09', timeSlot: 'morning', category: 'EPA覆核', students: ['逸賢'], teachers: ['著憶', '立梅'] }
+      ]
+    };
+
+    let weeksStore = [];
+    let currentWeekId = '';
+
+    function computeWeekDaysFromMonday(startDateStr) {
+      const parts = startDateStr.split('-');
+      const start = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      const dayNames = ['一', '二', '三', '四', '五'];
+      const weekDates = [];
+
+      for (let i = 0; i < 5; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        weekDates.push({
+          id: mm + '/' + dd,
+          label: mm + '/' + dd + ' (' + dayNames[i] + ')'
+        });
+      }
+      return weekDates;
+    }
+
+    function loadStorage() {
+      try {
+        const savedWeeks = localStorage.getItem('tsgh_pharmacy_eval_weeks');
+        const savedCurrentId = localStorage.getItem('tsgh_pharmacy_current_week_id');
+        const savedTeachers = localStorage.getItem('tsgh_pharmacy_teachers');
+        const savedStudents = localStorage.getItem('tsgh_pharmacy_students');
+
+        if (savedTeachers) {
+          try { teachers = JSON.parse(savedTeachers); } catch(e) {}
+        }
+        if (savedStudents) {
+          try { students = JSON.parse(savedStudents); } catch(e) {}
+        }
+
+        if (savedWeeks) {
+          try {
+            weeksStore = JSON.parse(savedWeeks);
+          } catch(e) {
+            weeksStore = [JSON.parse(JSON.stringify(defaultSampleWeek))];
+          }
+        } else {
+          weeksStore = [JSON.parse(JSON.stringify(defaultSampleWeek))];
+        }
+
+        if (!Array.isArray(weeksStore) || weeksStore.length === 0) {
+          weeksStore = [JSON.parse(JSON.stringify(defaultSampleWeek))];
+        }
+
+        // 快取防呆修復：補全舊格式資料
+        weeksStore.forEach(function(w) {
+          if (!w.startDate) w.startDate = '2026-10-05';
+          if (!Array.isArray(w.dates) || w.dates.length === 0) {
+            w.dates = computeWeekDaysFromMonday(w.startDate);
+          }
+          if (!Array.isArray(w.sessions)) w.sessions = [];
+          if (!w.title) w.title = w.dates[0].id + ' - ' + w.dates[4].id + ' 評核排程';
+        });
+
+        if (savedCurrentId && weeksStore.some(function(w) { return w.id === savedCurrentId; })) {
+          currentWeekId = savedCurrentId;
+        } else {
+          currentWeekId = weeksStore[0].id;
+        }
+      } catch(err) {
+        console.error("loadStorage error", err);
+        weeksStore = [JSON.parse(JSON.stringify(defaultSampleWeek))];
+        currentWeekId = weeksStore[0].id;
+      }
+    }
+
+    function saveStorage() {
+      try {
+        localStorage.setItem('tsgh_pharmacy_eval_weeks', JSON.stringify(weeksStore));
+        localStorage.setItem('tsgh_pharmacy_current_week_id', currentWeekId);
+        localStorage.setItem('tsgh_pharmacy_teachers', JSON.stringify(teachers));
+        localStorage.setItem('tsgh_pharmacy_students', JSON.stringify(students));
+      } catch(e) {
+        console.warn("Storage write error", e);
+      }
+    }
+
+    function getCurrentWeek() {
+      let cur = weeksStore.find(function(w) { return w.id === currentWeekId; });
+      if (!cur) {
+        cur = weeksStore[0];
+        if (cur) currentWeekId = cur.id;
+      }
+      if (!cur) {
+        cur = JSON.parse(JSON.stringify(defaultSampleWeek));
+        weeksStore = [cur];
+        currentWeekId = cur.id;
+      }
+      if (!cur.startDate) cur.startDate = '2026-10-05';
+      if (!Array.isArray(cur.dates) || cur.dates.length === 0) {
+        cur.dates = computeWeekDaysFromMonday(cur.startDate);
+      }
+      if (!Array.isArray(cur.sessions)) cur.sessions = [];
+      return cur;
+    }
+
+    // ==========================================
+    // 3. 週次管理與切換
+    // ==========================================
+    function updateWeekSelectorUI() {
+      const sel = document.getElementById('weekSelector');
+      sel.innerHTML = '';
+      weeksStore.forEach(function(w) {
+        const opt = document.createElement('option');
+        opt.value = w.id;
+        opt.textContent = w.title || w.id;
+        if (w.id === currentWeekId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    function createNewWeek() {
+      const cur = getCurrentWeek();
+      let nextStartDateStr = '2026-10-12';
+
+      if (cur && cur.startDate) {
+        const parts = cur.startDate.split('-');
+        const lastDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        lastDate.setDate(lastDate.getDate() + 7);
+        const y = lastDate.getFullYear();
+        const m = String(lastDate.getMonth() + 1).padStart(2, '0');
+        const d = String(lastDate.getDate()).padStart(2, '0');
+        nextStartDateStr = y + '-' + m + '-' + d;
+      }
+
+      const generatedDates = computeWeekDaysFromMonday(nextStartDateStr);
+      const titleDefault = generatedDates[0].id + ' - ' + generatedDates[4].id + ' 評核排程';
+      const weekId = 'week_' + nextStartDateStr.replace(/-/g, '') + '_' + Date.now();
+
+      const newWeek = {
+        id: weekId,
+        title: titleDefault,
+        startDate: nextStartDateStr,
+        dates: generatedDates,
+        sessions: []
+      };
+
+      weeksStore.unshift(newWeek);
+      currentWeekId = weekId;
+      saveStorage();
+
+      updateWeekSelectorUI();
+      syncInputsFromCurrentWeek();
+      refreshAllViews();
+      showToast('已成功建立「' + titleDefault + '」新排班表！');
+    }
+
+    function syncInputsFromCurrentWeek() {
+      const cur = getCurrentWeek();
+      if (!cur) return;
+      document.getElementById('weekTitleInput').value = cur.title || '';
+      document.getElementById('displayWeekTitle').textContent = cur.title || '臨床評核排程總表';
+      document.getElementById('weekStartDatePicker').value = cur.startDate || '2026-10-05';
+    }
+
+    // ==========================================
+    // 4. 畫面渲染函式
+    // ==========================================
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.remove('opacity-0');
+      setTimeout(function() { toast.classList.add('opacity-0'); }, 2500);
+    }
+
+    function getCategoryStyle(cat) {
+      return CATEGORY_STYLES[cat] || { badgeBg: 'bg-slate-100', badgeText: 'text-slate-700', border: 'border-slate-300' };
+    }
+
+    function getCategoryLink(cat) {
+      if (EVALUATION_LINKS[cat]) return EVALUATION_LINKS[cat];
+      for (const key in EVALUATION_LINKS) {
+        if (cat.indexOf(key) !== -1) return EVALUATION_LINKS[key];
+      }
+      return null;
+    }
+
+    function checkUrlMode() {
+      const hash = window.location.hash;
+      if (hash.indexOf('view=display') !== -1) {
+        isDisplayMode = true;
+        document.body.classList.add('is-display-mode');
+        document.getElementById('displayModeBadge').classList.remove('hidden');
+        document.getElementById('btnSwitchToAdmin').classList.remove('hidden');
+        document.getElementById('weekTitleInput').setAttribute('readonly', 'true');
+        document.getElementById('weekTitleInput').classList.add('bg-slate-100', 'cursor-not-allowed');
+        document.getElementById('weekStartDatePicker').setAttribute('disabled', 'true');
+        document.getElementById('weekStartDatePicker').classList.add('bg-slate-100', 'cursor-not-allowed');
+
+        const match = hash.match(/data=([^&]+)/);
+        if (match && match[1]) {
+          try {
+            const decoded = JSON.parse(decodeURIComponent(escape(atob(match[1]))));
+            if (decoded.currentWeek) {
+              const incoming = decoded.currentWeek;
+              const existIdx = weeksStore.findIndex(function(w) { return w.id === incoming.id; });
+              if (existIdx !== -1) {
+                weeksStore[existIdx] = incoming;
+              } else {
+                weeksStore.unshift(incoming);
+              }
+              currentWeekId = incoming.id;
+            }
+            if (decoded.teachers) teachers = decoded.teachers;
+            if (decoded.students) students = decoded.students;
+          } catch(e) {
+            console.error("Payload decode error:", e);
+          }
+        }
+      } else {
+        isDisplayMode = false;
+        document.body.classList.remove('is-display-mode');
+        document.getElementById('displayModeBadge').classList.add('hidden');
+        document.getElementById('btnSwitchToAdmin').classList.add('hidden');
+        document.getElementById('weekTitleInput').removeAttribute('readonly');
+        document.getElementById('weekTitleInput').classList.remove('bg-slate-100', 'cursor-not-allowed');
+        document.getElementById('weekStartDatePicker').removeAttribute('disabled');
+        document.getElementById('weekStartDatePicker').classList.remove('bg-slate-100', 'cursor-not-allowed');
+      }
+    }
+
+    function renderCalendar() {
+      const cur = getCurrentWeek();
+      const theadRow = document.getElementById('calendarHeaderRow');
+      const tbody = document.getElementById('calendarTableBody');
+      
+      theadRow.innerHTML = '<th class="border border-slate-300 px-3 py-3 w-20 bg-slate-200/70">時段</th>';
+      cur.dates.forEach(function(d) {
+        const th = document.createElement('th');
+        th.className = 'border border-slate-300 px-3 py-3 w-1/5 min-w-[170px]';
+        th.textContent = d.label;
+        theadRow.appendChild(th);
+      });
+
+      tbody.innerHTML = '';
+      const timeSlots = [
+        { id: 'morning', label: '上午', sub: '(早)' },
+        { id: 'afternoon', label: '下午', sub: '(午)' }
+      ];
+
+      timeSlots.forEach(function(slot) {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/40 transition';
+
+        const tdHeader = document.createElement('td');
+        tdHeader.className = 'border border-slate-300 p-2 text-center bg-slate-50 font-medium text-slate-700 align-middle';
+        tdHeader.innerHTML = '<span class="text-base font-bold">' + slot.label + '</span><br><span class="text-xs text-slate-400 font-mono">' + slot.sub + '</span>';
+        tr.appendChild(tdHeader);
+
+        cur.dates.forEach(function(d) {
+          const td = document.createElement('td');
+          td.className = 'border border-slate-300 p-2 align-top bg-white min-h-[140px]';
+
+          const slotSessions = (cur.sessions || []).filter(function(s) { return s.date === d.id && s.timeSlot === slot.id; });
+          const container = document.createElement('div');
+          container.className = 'flex flex-col gap-2 min-h-[110px]';
+
+          if (slotSessions.length === 0) {
+            const emptyHint = document.createElement('div');
+            emptyHint.className = 'empty-slot-placeholder flex-1 flex items-center justify-center text-xs text-slate-300 italic';
+            emptyHint.textContent = '無排班';
+            container.appendChild(emptyHint);
+          } else {
+            slotSessions.forEach(function(session) {
+              const card = document.createElement('div');
+              const style = getCategoryStyle(session.category);
+              card.className = 'border-l-4 ' + style.border + ' bg-white shadow-xs rounded p-2 text-xs border border-slate-200 hover:shadow-md transition relative group';
+
+              card.innerHTML = 
+                '<div class="flex items-center justify-between mb-1">' +
+                  '<span class="font-bold px-1.5 py-0.5 rounded text-[11px] ' + style.badgeBg + ' ' + style.badgeText + '">' + session.category + '</span>' +
+                  '<div class="card-action-btn flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">' +
+                    '<button onclick="editSession(\'' + session.id + '\')" title="編輯" class="text-slate-400 hover:text-indigo-600 p-0.5"><i class="fa-solid fa-pen"></i></button>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="text-slate-800 font-semibold mb-1">' +
+                  (session.students || []).join('、') +
+                '</div>' +
+                '<div class="text-[11px] text-slate-500 flex items-start gap-1">' +
+                  '<span class="text-slate-400 shrink-0">師：</span>' +
+                  '<span class="text-indigo-900 font-medium">' + (session.teachers || []).join('、') + '</span>' +
+                '</div>';
+              container.appendChild(card);
+            });
+          }
+
+          const btnAdd = document.createElement('button');
+          btnAdd.className = 'btn-add-slot no-export mt-auto w-full py-1 text-center text-xs text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/60 rounded border border-dashed border-slate-200 transition';
+          btnAdd.innerHTML = '<i class="fa-solid fa-plus text-[10px]"></i> 新增';
+          btnAdd.onclick = function() { openSessionModalFor(d.id, slot.id); };
+          container.appendChild(btnAdd);
+
+          td.appendChild(container);
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderList() {
+      const cur = getCurrentWeek();
+      const tbody = document.getElementById('listTableBody');
+      tbody.innerHTML = '';
+
+      const sorted = (cur.sessions || []).slice().sort(function(a, b) {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        return a.timeSlot === 'morning' ? -1 : 1;
+      });
+
+      if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">目前本週尚無任何評核場次</td></tr>';
+        return;
+      }
+
+      sorted.forEach(function(s) {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        const dateObj = cur.dates.find(function(d) { return d.id === s.date; });
+        const dateStr = dateObj ? dateObj.label : s.date;
+        const timeSlotLabel = s.timeSlot === 'morning' ? '<span class="text-amber-600 font-semibold">上午</span>' : '<span class="text-blue-600 font-semibold">下午</span>';
+        const style = getCategoryStyle(s.category);
+
+        tr.innerHTML = 
+          '<td class="py-2.5 px-3 font-medium text-slate-700">' + dateStr + ' ' + timeSlotLabel + '</td>' +
+          '<td class="py-2.5 px-3">' +
+            '<span class="inline-block px-2 py-0.5 rounded text-xs font-semibold ' + style.badgeBg + ' ' + style.badgeText + '">' + s.category + '</span>' +
+          '</td>' +
+          '<td class="py-2.5 px-3 font-semibold text-slate-800">' + (s.students || []).join('、') + '</td>' +
+          '<td class="py-2.5 px-3 text-indigo-900">' + (s.teachers || []).join('、') + '</td>' +
+          '<td class="py-2.5 px-3 text-right admin-only no-export">' +
+            '<button onclick="editSession(\'' + s.id + '\')" class="text-slate-400 hover:text-indigo-600 text-xs px-2 py-1"><i class="fa-solid fa-pen"></i></button>' +
+            '<button onclick="deleteSessionDirect(\'' + s.id + '\')" class="text-slate-400 hover:text-rose-600 text-xs px-2 py-1"><i class="fa-regular fa-trash-can"></i></button>' +
+          '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderStats() {
+      const cur = getCurrentWeek();
+      const teacherCounts = {};
+      const studentCounts = {};
+
+      teachers.forEach(function(t) { teacherCounts[t] = 0; });
+      students.forEach(function(s) { studentCounts[s] = 0; });
+
+      (cur.sessions || []).forEach(function(sess) {
+        (sess.teachers || []).forEach(function(t) { teacherCounts[t] = (teacherCounts[t] || 0) + 1; });
+        (sess.students || []).forEach(function(s) { studentCounts[s] = (studentCounts[s] || 0) + 1; });
+      });
+
+      const tContainer = document.getElementById('teacherStatsList');
+      tContainer.innerHTML = '';
+      Object.entries(teacherCounts).sort(function(a,b) { return b[1] - a[1]; }).forEach(function(pair) {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-white p-2 rounded border border-slate-200';
+        div.innerHTML = 
+          '<span class="font-medium text-slate-700">' + pair[0] + ' 老師</span>' +
+          '<span class="font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">' + pair[1] + ' 場</span>';
+        tContainer.appendChild(div);
+      });
+
+      const sContainer = document.getElementById('studentStatsList');
+      sContainer.innerHTML = '';
+      Object.entries(studentCounts).sort(function(a,b) { return b[1] - a[1]; }).forEach(function(pair) {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-white p-2 rounded border border-slate-200';
+        div.innerHTML = 
+          '<span class="font-medium text-slate-700">' + pair[0] + '</span>' +
+          '<span class="font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">' + pair[1] + ' 項評核</span>';
+        sContainer.appendChild(div);
+      });
+    }
+
+    function renderTeacherFilterGroup() {
+      const group = document.getElementById('teacherCheckboxGroup');
+      group.innerHTML = '';
+
+      teachers.forEach(function(t) {
+        const isChecked = selectedTeacherFilters.has(t);
+        const label = document.createElement('label');
+        label.className = 'cursor-pointer px-3 py-1.5 rounded-full border transition flex items-center gap-1.5 select-none ' +
+          (isChecked 
+            ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' 
+            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100');
+
+        label.innerHTML = 
+          '<input type="checkbox" value="' + t + '" class="hidden" ' + (isChecked ? 'checked' : '') + '>' +
+          '<i class="fa-solid ' + (isChecked ? 'fa-check-circle' : 'fa-circle-notch text-slate-300') + ' text-xs"></i>' +
+          '<span>' + t + ' 老師</span>';
+
+        label.querySelector('input').addEventListener('change', function(e) {
+          if (e.target.checked) {
+            selectedTeacherFilters.add(t);
+          } else {
+            selectedTeacherFilters.delete(t);
+          }
+          renderTeacherFilterGroup();
+          renderTeacherWeeklySummary();
+        });
+
+        group.appendChild(label);
+      });
+    }
+
+    function renderTeacherWeeklySummary() {
+      const cur = getCurrentWeek();
+      const container = document.getElementById('teacherSummaryCards');
+      const emptyAlert = document.getElementById('noTeacherSelectedAlert');
+      container.innerHTML = '';
+
+      if (selectedTeacherFilters.size === 0) {
+        emptyAlert.classList.remove('hidden');
+        return;
+      } else {
+        emptyAlert.classList.add('hidden');
+      }
+
+      teachers.forEach(function(teacher) {
+        if (!selectedTeacherFilters.has(teacher)) return;
+
+        const teacherSessions = (cur.sessions || [])
+          .filter(function(s) { return (s.teachers || []).indexOf(teacher) !== -1; })
+          .sort(function(a, b) {
+            if (a.date !== b.date) return a.date.localeCompare(b.date);
+            return a.timeSlot === 'morning' ? -1 : 1;
+          });
+
+        const card = document.createElement('div');
+        card.className = 'bg-slate-50/70 border border-slate-200 rounded-lg p-3.5 flex flex-col justify-between hover:border-slate-300 transition';
+
+        let listHtml = '';
+        if (teacherSessions.length === 0) {
+          listHtml = '<div class="text-xs text-slate-400 italic py-3 text-center">本週暫無安排評核任務</div>';
+        } else {
+          listHtml = '<ul class="space-y-2 mt-2 text-xs">';
+          teacherSessions.forEach(function(sess) {
+            const timeSlotText = sess.timeSlot === 'morning' ? '早' : '午';
+            const style = getCategoryStyle(sess.category);
+            const link = getCategoryLink(sess.category);
+
+            let badgeHtml = '';
+            if (link) {
+              badgeHtml = 
+                '<a href="' + link + '" target="_blank" rel="noopener noreferrer" title="前往填寫表單" class="inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded ' + style.badgeBg + ' ' + style.badgeText + ' hover:opacity-80 underline underline-offset-2 decoration-1 transition">' +
+                  sess.category +
+                  '<i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-75"></i>' +
+                '</a>';
+            } else {
+              badgeHtml = '<span class="font-bold px-1.5 py-0.5 rounded ' + style.badgeBg + ' ' + style.badgeText + '">' + sess.category + '</span>';
+            }
+
+            listHtml += 
+              '<li class="flex flex-col bg-white p-2 rounded border border-slate-200 shadow-2xs">' +
+                '<div class="flex items-center justify-between mb-1">' +
+                  '<span class="font-medium text-slate-600">' + sess.date + ' (' + timeSlotText + ')</span>' +
+                  badgeHtml +
+                '</div>' +
+                '<div class="text-slate-700 flex items-center gap-1">' +
+                  '<span class="text-slate-400">學員：</span>' +
+                  '<span class="font-semibold">' + (sess.students || []).join('、') + '</span>' +
+                '</div>' +
+              '</li>';
+          });
+          listHtml += '</ul>';
+        }
+
+        card.innerHTML = 
+          '<div>' +
+            '<div class="flex items-center justify-between border-b border-slate-200 pb-2">' +
+              '<span class="font-bold text-slate-900 text-sm flex items-center gap-1.5">' +
+                '<i class="fa-solid fa-user-tie text-indigo-600"></i> ' + teacher + ' 老師' +
+              '</span>' +
+              '<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ' + (teacherSessions.length > 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-500') + '">' +
+                teacherSessions.length + ' 場任務' +
+              '</span>' +
+            '</div>' +
+            listHtml +
+          '</div>';
+
+        container.appendChild(card);
+      });
+    }
+
+    function refreshAllViews() {
+      renderCalendar();
+      renderList();
+      renderStats();
+      renderTeacherFilterGroup();
+      renderTeacherWeeklySummary();
+      updateCategorySelectOptions();
+      updateModalDateOptions();
+    }
+
+    function updateModalDateOptions() {
+      const cur = getCurrentWeek();
+      const modalDateSel = document.getElementById('modalDate');
+      modalDateSel.innerHTML = '';
+      cur.dates.forEach(function(d) {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.label;
+        modalDateSel.appendChild(opt);
+      });
+    }
+
+    // ==========================================
+    // 5. 新增 / 編輯彈窗與下拉標籤邏輯
+    // ==========================================
+    let currentSelectedStudents = [];
+    let currentSelectedTeachers = [];
+
+    function updateCategorySelectOptions() {
+      const select = document.getElementById('modalCategory');
+      select.innerHTML = '';
+      categories.forEach(function(c) {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+      });
+    }
+
+    function initDropdowns() {
+      const sDrop = document.getElementById('studentDropdown');
+      sDrop.innerHTML = '<option value="">-- 點擊選擇學員加入 --</option>';
+      students.forEach(function(s) {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        sDrop.appendChild(opt);
+      });
+
+      const tDrop = document.getElementById('teacherDropdown');
+      tDrop.innerHTML = '<option value="">-- 點擊選擇教師加入 --</option>';
+      teachers.forEach(function(t) {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        tDrop.appendChild(opt);
+      });
+    }
+
+    function renderChips(containerId, list, removeCallback) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      list.forEach(function(item, idx) {
+        const chip = document.createElement('span');
+        chip.className = 'inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md text-xs font-medium';
+        chip.innerHTML = 
+          '<span>' + item + '</span>' +
+          '<button type="button" class="text-indigo-400 hover:text-indigo-900 font-bold ml-0.5">&times;</button>';
+        chip.querySelector('button').onclick = function() { removeCallback(idx); };
+        container.appendChild(chip);
+      });
+    }
+
+    function refreshStudentChips() {
+      renderChips('selectedStudentsChips', currentSelectedStudents, function(idx) {
+        currentSelectedStudents.splice(idx, 1);
+        refreshStudentChips();
+      });
+    }
+
+    function refreshTeacherChips() {
+      renderChips('selectedTeachersChips', currentSelectedTeachers, function(idx) {
+        currentSelectedTeachers.splice(idx, 1);
+        refreshTeacherChips();
+      });
+    }
+
+    const sessionModal = document.getElementById('sessionModal');
+
+    function openSessionModalFor(targetDate, targetSlot) {
+      if (isDisplayMode) return;
+      const cur = getCurrentWeek();
+      document.getElementById('editSessionId').value = '';
+      document.getElementById('modalTitle').textContent = '新增評核場次（' + cur.title + '）';
+      document.getElementById('btnDeleteSession').classList.add('hidden');
+      
+      updateModalDateOptions();
+
+      const hasDate = cur.dates.some(function(d) { return d.id === targetDate; });
+      document.getElementById('modalDate').value = hasDate ? targetDate : cur.dates[0].id;
+      document.getElementById('modalTimeSlot').value = targetSlot || 'morning';
+      document.getElementById('modalCategory').value = categories[0] || 'EPA發藥';
+
+      currentSelectedStudents = [];
+      currentSelectedTeachers = [];
+      refreshStudentChips();
+      refreshTeacherChips();
+
+      sessionModal.classList.remove('hidden');
+    }
+
+    window.editSession = function(id) {
+      if (isDisplayMode) return;
+      const cur = getCurrentWeek();
+      const session = (cur.sessions || []).find(function(s) { return s.id === id; });
+      if (!session) return;
+
+      document.getElementById('editSessionId').value = session.id;
+      document.getElementById('modalTitle').textContent = '編輯評核場次';
+      document.getElementById('btnDeleteSession').classList.remove('hidden');
+
+      updateModalDateOptions();
+      document.getElementById('modalDate').value = session.date;
+      document.getElementById('modalTimeSlot').value = session.timeSlot;
+      document.getElementById('modalCategory').value = session.category;
+
+      currentSelectedStudents = (session.students || []).slice();
+      currentSelectedTeachers = (session.teachers || []).slice();
+      refreshStudentChips();
+      refreshTeacherChips();
+
+      sessionModal.classList.remove('hidden');
+    };
+
+    window.deleteSessionDirect = function(id) {
+      if (isDisplayMode) return;
+      if (confirm('確定要刪除這筆評核排程嗎？')) {
+        const cur = getCurrentWeek();
+        cur.sessions = (cur.sessions || []).filter(function(s) { return s.id !== id; });
+        saveStorage();
+        refreshAllViews();
+        showToast('已刪除評核場次');
+      }
+    };
+
+    // ==========================================
+    // 6. 下載圖片 (僅截取總表區域)
+    // ==========================================
+    document.getElementById('btnExportImage').addEventListener('click', async function() {
+      const tableArea = document.getElementById('scheduleTableCaptureArea');
+      tableArea.classList.add('is-exporting');
+
+      showToast('正在產生排程總表圖片...');
+
+      try {
+        await new Promise(function(resolve) { setTimeout(resolve, 150); });
+
+        const canvas = await html2canvas(tableArea, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          logging: false,
+          useCORS: true
+        });
+
+        const cur = getCurrentWeek();
+        const link = document.createElement('a');
+        link.download = (cur.title || '臨床評核排程表') + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('排程總表圖片已下載！');
+      } catch (err) {
+        console.error(err);
+        alert('匯出圖片時發生錯誤，請稍候再試。');
+      } finally {
+        tableArea.classList.remove('is-exporting');
+      }
+    });
+
+    // 匯出 CSV
+    document.getElementById('btnExportCSV').addEventListener('click', function() {
+      const cur = getCurrentWeek();
+      const csvLines = ['﻿週次,日期,時段,評核項目,受評學員(PGY),評核教師'];
+      (cur.sessions || []).forEach(function(s) {
+        const dateObj = cur.dates.find(function(d) { return d.id === s.date; });
+        const dateStr = dateObj ? dateObj.label : s.date;
+        const slotStr = s.timeSlot === 'morning' ? '上午' : '下午';
+        const studStr = '"' + (s.students || []).join('、') + '"';
+        const teachStr = '"' + (s.teachers || []).join('、') + '"';
+        csvLines.push('"' + cur.title + '",' + dateStr + ',' + slotStr + ',' + s.category + ',' + studStr + ',' + teachStr);
+      });
+
+      const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', (cur.title || '評核排程') + '.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('已匯出 CSV 檔案');
+    });
+
+    // ==========================================
+    // 7. 展示版專屬獨立連結產生
+    // ==========================================
+    const shareModal = document.getElementById('shareLinkModal');
+    const shareInput = document.getElementById('shareUrlInput');
+
+    function generateDisplayUrl() {
+      const cur = getCurrentWeek();
+      const payload = {
+        currentWeek: cur,
+        teachers: teachers,
+        students: students
+      };
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+      const currentUrl = window.location.origin + window.location.pathname;
+      return currentUrl + '#view=display&data=' + encoded;
+    }
+
+    document.getElementById('btnOpenShareModal').addEventListener('click', function() {
+      const url = generateDisplayUrl();
+      shareInput.value = url;
+      shareModal.classList.remove('hidden');
+    });
+
+    document.getElementById('btnCloseShareModal').onclick = function() { shareModal.classList.add('hidden'); };
+    document.getElementById('btnDismissShareModal').onclick = function() { shareModal.classList.add('hidden'); };
+
+    document.getElementById('btnCopyShareUrl').addEventListener('click', function() {
+      shareInput.select();
+      navigator.clipboard.writeText(shareInput.value).then(function() {
+        showToast('展示版專用網址已複製到剪貼簿！');
+      }).catch(function() {
+        document.execCommand('copy');
+        showToast('已複製！');
+      });
+    });
+
+    document.getElementById('btnPreviewShareUrl').addEventListener('click', function() {
+      window.open(shareInput.value, '_blank');
+    });
+
+    document.getElementById('btnSwitchToAdmin').addEventListener('click', function() {
+      history.pushState("", document.title, window.location.pathname + window.location.search);
+      window.location.hash = '';
+      isDisplayMode = false;
+      checkUrlMode();
+      refreshAllViews();
+      window.location.reload();
+    });
+
+    // ==========================================
+    // 8. 初始化與所有事件監聽
+    // ==========================================
+    window.addEventListener('hashchange', function() {
+      checkUrlMode();
+      refreshAllViews();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadStorage();
+      checkUrlMode();
+      initDropdowns();
+      updateWeekSelectorUI();
+      syncInputsFromCurrentWeek();
+      refreshAllViews();
+
+      // 切換歷史週次
+      document.getElementById('weekSelector').addEventListener('change', function(e) {
+        currentWeekId = e.target.value;
+        saveStorage();
+        syncInputsFromCurrentWeek();
+        refreshAllViews();
+        showToast('已切換至「' + getCurrentWeek().title + '」！');
+      });
+
+      // 建立新的一週
+      document.getElementById('btnCreateNewWeek').addEventListener('click', function() {
+        createNewWeek();
+      });
+
+      // 刪除目前週次
+      document.getElementById('btnDeleteCurrentWeek').addEventListener('click', function() {
+        if (weeksStore.length <= 1) {
+          alert('至少需要保留一週的排程紀錄，無法刪除！');
+          return;
+        }
+        const cur = getCurrentWeek();
+        if (confirm('確定要刪除「' + cur.title + '」的排程紀錄嗎？')) {
+          weeksStore = weeksStore.filter(function(w) { return w.id !== currentWeekId; });
+          currentWeekId = weeksStore[0].id;
+          saveStorage();
+          syncInputsFromCurrentWeek();
+          updateWeekSelectorUI();
+          refreshAllViews();
+          showToast('已刪除該週排程紀錄！');
+        }
+      });
+
+      // 自選起始週一日期 (動態計算 5 天時段)
+      document.getElementById('weekStartDatePicker').addEventListener('change', function(e) {
+        const dateVal = e.target.value;
+        if (!dateVal) return;
+        const cur = getCurrentWeek();
+        cur.startDate = dateVal;
+        cur.dates = computeWeekDaysFromMonday(dateVal);
+        cur.title = cur.dates[0].id + ' - ' + cur.dates[4].id + ' 評核排程';
+        
+        saveStorage();
+        syncInputsFromCurrentWeek();
+        updateWeekSelectorUI();
+        refreshAllViews();
+        showToast('已更新日期為 ' + cur.title + '！');
+      });
+
+      // 修改週名稱標題
+      document.getElementById('weekTitleInput').addEventListener('input', function(e) {
+        const cur = getCurrentWeek();
+        cur.title = e.target.value;
+        document.getElementById('displayWeekTitle').textContent = e.target.value;
+        saveStorage();
+        updateWeekSelectorUI();
+      });
+
+      // 頁籤切換
+      const tabCal = document.getElementById('tabCalendar');
+      const tabList = document.getElementById('tabList');
+      const tabStats = document.getElementById('tabStats');
+      const calBox = document.getElementById('calendarViewContainer');
+      const listBox = document.getElementById('listViewContainer');
+      const statsBox = document.getElementById('statsViewContainer');
+
+      function switchTab(activeBtn, showBox) {
+        [tabCal, tabList, tabStats].forEach(function(b) {
+          b.className = 'px-3 py-1.5 rounded-md hover:text-slate-900 transition';
+        });
+        activeBtn.className = 'px-3 py-1.5 rounded-md bg-white text-indigo-700 font-semibold shadow-sm transition';
+        [calBox, listBox, statsBox].forEach(function(box) { box.classList.add('hidden'); });
+        showBox.classList.remove('hidden');
+      }
+
+      tabCal.onclick = function() { switchTab(tabCal, calBox); };
+      tabList.onclick = function() { switchTab(tabList, listBox); };
+      tabStats.onclick = function() { switchTab(tabStats, statsBox); };
+
+      // 下拉選擇學員自動加入
+      const sDrop = document.getElementById('studentDropdown');
+      function addStudent() {
+        const val = sDrop.value;
+        if (val && currentSelectedStudents.indexOf(val) === -1) {
+          currentSelectedStudents.push(val);
+          refreshStudentChips();
+        }
+        sDrop.value = '';
+      }
+      sDrop.addEventListener('change', addStudent);
+      document.getElementById('btnAddStudentTag').onclick = addStudent;
+
+      // 下拉選擇教師自動加入
+      const tDrop = document.getElementById('teacherDropdown');
+      function addTeacher() {
+        const val = tDrop.value;
+        if (val && currentSelectedTeachers.indexOf(val) === -1) {
+          currentSelectedTeachers.push(val);
+          refreshTeacherChips();
+        }
+        tDrop.value = '';
+      }
+      tDrop.addEventListener('change', addTeacher);
+      document.getElementById('btnAddTeacherTag').onclick = addTeacher;
+
+      // 點擊頂部「新增評核場次」按鈕
+      document.getElementById('btnNewSession').onclick = function() {
+        const cur = getCurrentWeek();
+        openSessionModalFor(cur.dates[0].id, 'morning');
+      };
+
+      document.getElementById('btnCloseModal').onclick = function() { sessionModal.classList.add('hidden'); };
+      document.getElementById('btnCancelModal').onclick = function() { sessionModal.classList.add('hidden'); };
+
+      // 提交儲存評核場次
+      document.getElementById('sessionForm').onsubmit = function(e) {
+        e.preventDefault();
+        const cur = getCurrentWeek();
+        const editId = document.getElementById('editSessionId').value;
+        const date = document.getElementById('modalDate').value;
+        const timeSlot = document.getElementById('modalTimeSlot').value;
+        const category = document.getElementById('modalCategory').value;
+
+        // 若目前選單有停留人名但尚未點加入，自動納入
+        if (sDrop.value && currentSelectedStudents.indexOf(sDrop.value) === -1) {
+          currentSelectedStudents.push(sDrop.value);
+        }
+        if (tDrop.value && currentSelectedTeachers.indexOf(tDrop.value) === -1) {
+          currentSelectedTeachers.push(tDrop.value);
+        }
+
+        if (currentSelectedStudents.length === 0) {
+          alert('請至少選擇一位受評學員');
+          return;
+        }
+        if (currentSelectedTeachers.length === 0) {
+          alert('請至少選擇一位評核教師');
+          return;
+        }
+
+        if (!Array.isArray(cur.sessions)) cur.sessions = [];
+
+        if (editId) {
+          const idx = cur.sessions.findIndex(function(s) { return s.id === editId; });
+          if (idx !== -1) {
+            cur.sessions[idx] = { 
+              id: editId, 
+              date: date, 
+              timeSlot: timeSlot, 
+              category: category, 
+              students: currentSelectedStudents.slice(), 
+              teachers: currentSelectedTeachers.slice() 
+            };
+          }
+        } else {
+          cur.sessions.push({
+            id: 's_' + Date.now(),
+            date: date,
+            timeSlot: timeSlot,
+            category: category,
+            students: currentSelectedStudents.slice(),
+            teachers: currentSelectedTeachers.slice()
+          });
+        }
+
+        saveStorage();
+        sessionModal.classList.add('hidden');
+        refreshAllViews();
+        showToast(editId ? '評核場次已修改' : '已成功新增評核場次至當前週！');
+      };
+
+      document.getElementById('btnDeleteSession').onclick = function() {
+        const editId = document.getElementById('editSessionId').value;
+        const cur = getCurrentWeek();
+        if (editId && confirm('確定要刪除這筆評核排程嗎？')) {
+          cur.sessions = (cur.sessions || []).filter(function(s) { return s.id !== editId; });
+          saveStorage();
+          sessionModal.classList.add('hidden');
+          refreshAllViews();
+          showToast('已刪除評核場次');
+        }
+      };
+
+      // 教師過濾按鈕全選 / 清空
+      document.getElementById('btnSelectAllTeachers').onclick = function() {
+        teachers.forEach(function(t) { selectedTeacherFilters.add(t); });
+        renderTeacherFilterGroup();
+        renderTeacherWeeklySummary();
+      };
+
+      document.getElementById('btnClearTeachers').onclick = function() {
+        selectedTeacherFilters.clear();
+        renderTeacherFilterGroup();
+        renderTeacherWeeklySummary();
+      };
+
+      // 名單設定
+      const configModal = document.getElementById('configModal');
+      document.getElementById('btnOpenConfig').onclick = function() {
+        document.getElementById('configTeachersInput').value = teachers.join('、');
+        document.getElementById('configStudentsInput').value = students.join('、');
+        document.getElementById('configCategoriesInput').value = categories.join(',');
+        configModal.classList.remove('hidden');
+      };
+      document.getElementById('btnCloseConfigModal').onclick = function() { configModal.classList.add('hidden'); };
+      document.getElementById('btnCancelConfig').onclick = function() { configModal.classList.add('hidden'); };
+
+      document.getElementById('btnSaveConfig').onclick = function() {
+        function parseList(str) {
+          return str.split(/[,，、\s\n]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+        }
+
+        const newTeachers = parseList(document.getElementById('configTeachersInput').value);
+        const newStudents = parseList(document.getElementById('configStudentsInput').value);
+        const newCats = parseList(document.getElementById('configCategoriesInput').value);
+
+        if (newTeachers.length > 0) teachers = newTeachers;
+        if (newStudents.length > 0) students = newStudents;
+        if (newCats.length > 0) categories = newCats;
+
+        saveStorage();
+        initDropdowns();
+        refreshAllViews();
+        configModal.classList.add('hidden');
+        showToast('名單與設定已即時更新完成！');
+      };
+
+      // 左下角懸浮按鈕
+      const btnRefresh = document.getElementById('btnFloatingRefresh');
+      const refreshIcon = document.getElementById('floatingRefreshIcon');
+
+      btnRefresh.onclick = function() {
+        refreshIcon.classList.remove('animate-spin-custom');
+        void refreshIcon.offsetWidth;
+        refreshIcon.classList.add('animate-spin-custom');
+
+        loadStorage();
+        initDropdowns();
+        updateWeekSelectorUI();
+        syncInputsFromCurrentWeek();
+        refreshAllViews();
+        showToast('名單與排程資料已重整完畢！');
+      };
+    });
+  </script>
+</body>
+</html>
