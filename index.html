@@ -56,18 +56,27 @@
     .animate-spin-custom {
       animation: spin-once 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
+    /* 下拉選單滑鼠懸停顯示效果 */
+    .nav-dropdown:hover .nav-dropdown-menu {
+      display: block;
+    }
   </style>
 </head>
 <body class="text-slate-800 antialiased pb-28">
 
-  <!-- 頂部導航列 -->
+  <!-- 頂部導航列 (滑鼠懸停下拉選單式) -->
   <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-30 no-print">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- 左側標題 -->
       <div class="flex items-center gap-3">
         <span class="bg-indigo-700/80 px-2.5 py-1 rounded text-xs font-mono font-bold tracking-wider text-indigo-200">EPA & DOPS</span>
         <h1 class="text-lg md:text-xl font-bold tracking-tight">臨床評核排班管理系統</h1>
         <span id="displayModeBadge" class="hidden text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-medium">展示版 (唯讀模式)</span>
       </div>
+
+      <!-- 右側功能區 -->
       <div class="flex items-center flex-wrap gap-2 text-sm">
         
         <!-- 展示模式切回後台管理按鈕 -->
@@ -75,28 +84,60 @@
           <i class="fa-solid fa-lock text-xs text-amber-400"></i> 返回後台管理
         </button>
 
-        <!-- 展示版專屬連結生成鍵 (admin-only) -->
-        <button id="btnOpenShareModal" class="admin-only inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-md transition font-medium shadow-sm">
-          <i class="fa-solid fa-share-nodes text-xs"></i> 展示版連結
+        <!-- 1. 功能表 下拉選單 (滑鼠移上去直接選擇) -->
+        <div class="relative nav-dropdown py-1">
+          <button class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-800 hover:bg-indigo-700 text-white font-medium rounded-md shadow-xs transition border border-indigo-700/70">
+            <i class="fa-solid fa-bars text-xs text-indigo-300"></i>
+            <span>功能表</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-indigo-300"></i>
+          </button>
+          
+          <div class="nav-dropdown-menu hidden absolute right-0 mt-1 w-52 bg-white text-slate-800 rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
+            <button id="btnNewSessionMenu" class="admin-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-blue-700">
+              <i class="fa-solid fa-plus w-4 text-blue-600"></i>
+              <span>新增評核場次</span>
+            </button>
+            <button id="btnOpenShareModal" class="admin-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-purple-700">
+              <i class="fa-solid fa-share-nodes w-4 text-purple-600"></i>
+              <span>展示版專屬連結</span>
+            </button>
+            <div class="border-t border-slate-100 my-1"></div>
+            <button id="btnExportImage" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-emerald-700">
+              <i class="fa-solid fa-image w-4 text-emerald-600"></i>
+              <span>下載排班圖片 (僅週表)</span>
+            </button>
+            <button id="btnExportCSV" class="admin-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-slate-700">
+              <i class="fa-solid fa-file-csv w-4 text-slate-500"></i>
+              <span>匯出 Excel (CSV)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. 設定 下拉選單 (滑鼠移上去直接選擇) -->
+        <div class="admin-only relative nav-dropdown py-1">
+          <button class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-800 hover:bg-indigo-700 text-white font-medium rounded-md shadow-xs transition border border-indigo-700/70">
+            <i class="fa-solid fa-gear text-xs text-indigo-300"></i>
+            <span>設定</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-indigo-300"></i>
+          </button>
+          
+          <div class="nav-dropdown-menu hidden absolute right-0 mt-1 w-52 bg-white text-slate-800 rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
+            <button id="btnOpenConfig" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-slate-700">
+              <i class="fa-solid fa-users-gear w-4 text-indigo-600"></i>
+              <span>名單設定 (教師與學員)</span>
+            </button>
+            <button id="btnOpenLinksConfig" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-slate-700">
+              <i class="fa-solid fa-link w-4 text-emerald-600"></i>
+              <span>評量表連結設定</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 快捷新增按鈕 (保留最常使用之按鍵) -->
+        <button id="btnNewSession" class="admin-only inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md transition font-medium shadow-sm ml-1 text-xs">
+          <i class="fa-solid fa-plus"></i> 新增評核
         </button>
 
-        <!-- 名單設定 (admin-only) -->
-        <button id="btnOpenConfig" class="admin-only inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 hover:bg-indigo-700 text-indigo-100 rounded-md transition font-medium border border-indigo-700/60">
-          <i class="fa-solid fa-sliders text-xs"></i> 名單設定
-        </button>
-
-        <button id="btnExportCSV" class="admin-only inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-md transition font-medium border border-slate-700">
-          <i class="fa-solid fa-file-csv text-xs text-emerald-400"></i> 匯出 CSV
-        </button>
-
-        <!-- 下載排班圖片按鈕 (僅下載週總表) -->
-        <button id="btnExportImage" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md transition font-medium shadow-sm">
-          <i class="fa-solid fa-image text-xs"></i> 下載排班圖片
-        </button>
-
-        <button id="btnNewSession" class="admin-only inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md transition font-medium shadow-sm ml-1">
-          <i class="fa-solid fa-plus text-xs"></i> 新增評核場次
-        </button>
       </div>
     </div>
   </header>
@@ -294,7 +335,7 @@
           <div class="font-bold flex items-center gap-1"><i class="fa-solid fa-circle-info"></i> 展示版特色：</div>
           <ul class="list-disc list-inside space-y-0.5 text-amber-700">
             <li>排班總表格完全唯讀（無新增/編輯按鈕）。</li>
-            <li>下方教師任務僅在勾選教師姓名時展開，直通 EPA/DOPS 表單。</li>
+            <li>下方教師任務僅在勾選教師姓名時展開，直通最新設定之評核表單。</li>
           </ul>
         </div>
 
@@ -306,7 +347,7 @@
     </div>
   </div>
 
-  <!-- 彈出視窗 2：新增 / 編輯場次 Modal (僅後台版使用) -->
+  <!-- 彈出視窗 2：新增 / 編輯場次 Modal -->
   <div id="sessionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
       <div class="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center justify-between">
@@ -374,12 +415,12 @@
     </div>
   </div>
 
-  <!-- 彈出視窗 3：名單與項目設定 Modal -->
+  <!-- 彈出視窗 3：名單設定 Modal (教師與學員) -->
   <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
       <div class="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center justify-between">
         <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i class="fa-solid fa-user-pen text-indigo-600"></i> 名單名冊設定
+          <i class="fa-solid fa-users-gear text-indigo-600"></i> 名單名冊設定
         </h3>
         <button id="btnCloseConfigModal" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
       </div>
@@ -392,13 +433,43 @@
           <label class="block font-semibold text-slate-700 mb-1">PGY 學員名冊 (以頓號或逗號隔開)</label>
           <textarea id="configStudentsInput" rows="3" class="w-full border border-slate-300 rounded p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"></textarea>
         </div>
-        <div>
-          <label class="block font-semibold text-slate-700 mb-1">評核項目設定 (以逗號隔開)</label>
-          <input type="text" id="configCategoriesInput" class="w-full border border-slate-300 rounded p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
         <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
           <button id="btnCancelConfig" class="px-3 py-1.5 border border-slate-300 text-slate-600 rounded hover:bg-slate-100">取消</button>
-          <button id="btnSaveConfig" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-medium shadow-sm">儲存並即時重整</button>
+          <button id="btnSaveConfig" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-medium shadow-sm">儲存名單設定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 彈出視窗 4：評量表連結設定 Modal (新增功能：自由調整、修改與新增連結) -->
+  <div id="linksConfigModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200">
+      <div class="bg-emerald-900 text-white px-5 py-4 flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-link text-emerald-300"></i> 評量表與系統超連結設定
+        </h3>
+        <button id="btnCloseLinksConfigModal" class="text-emerald-200 hover:text-white text-xl">&times;</button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <p class="text-slate-500">
+          您可以隨時在此修改各評核項目對應的線上表單（Google 表單或 CTS 系統），亦可新增自訂的評核項目：
+        </p>
+
+        <!-- 連結清單管理列表 -->
+        <div id="evaluationLinksList" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+          <!-- JS 動態生成各項目的名稱與網址輸入框 -->
+        </div>
+
+        <!-- 新增一列評核項目與連結 -->
+        <div class="pt-2">
+          <button type="button" id="btnAddNewLinkRow" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded font-semibold transition">
+            <i class="fa-solid fa-plus text-xs"></i> 新增評核項目與連結
+          </button>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
+          <button id="btnCancelLinksConfig" class="px-3 py-1.5 border border-slate-300 text-slate-600 rounded hover:bg-slate-100">取消</button>
+          <button id="btnSaveLinksConfig" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-medium shadow-sm">儲存評量表設定</button>
         </div>
       </div>
     </div>
@@ -412,14 +483,16 @@
 
   <script>
     // ==========================================
-    // 1. 各項評核專屬表單 / 系統超連結設定
+    // 1. 各項評核專屬表單 / 系統超連結設定 (可自訂調整與擴充)
     // ==========================================
-    const EVALUATION_LINKS = {
+    const DEFAULT_EVALUATION_LINKS = {
       'EPA發藥': 'https://docs.google.com/forms/d/e/1FAIpQLSfNnVcWIBGOqpYGAS7r2U_puBsiSujMK32bqd6MOSUCqw3_0Q/viewform?usp=header',
       'EPA覆核': 'https://docs.google.com/forms/d/e/1FAIpQLSf2TF9p1V2tQnEULziYYFDLcli47vtJmH7-G4SrHQNix3Czdg/viewform?usp=header',
       'DOPS調劑(CEPO)': 'https://cts.tsgh.ndmctsgh.edu.tw/',
       'EPA外用': 'https://docs.google.com/forms/d/e/1FAIpQLSdNCB59ON64s2rflPTjuj_5-SIhpMRUwh7wPL9MzMNoEOVT-Q/viewform?usp=header'
     };
+
+    let evaluationLinks = Object.assign({}, DEFAULT_EVALUATION_LINKS);
 
     const CATEGORY_STYLES = {
       'EPA發藥': { badgeBg: 'bg-amber-100', badgeText: 'text-amber-800', border: 'border-amber-300' },
@@ -436,7 +509,7 @@
 
     let teachers = ['丞凱', '著憶', '芯瑜', '立梅', '俐安', '馥瑄'];
     let students = ['逸賢', '舒婷', '聖峰', '炤宇', '皓勛', '士軒', '映萱', '品臻', '瑋曈', '宜靖', '蓁均', '妤倢', '瑜軒', '妤柔'];
-    let categories = ['EPA發藥', 'EPA覆核', 'DOPS調劑(CEPO)', 'EPA外用'];
+    let categories = Object.keys(DEFAULT_EVALUATION_LINKS);
 
     const defaultSampleWeek = {
       id: 'week_20261005',
@@ -494,12 +567,19 @@
         const savedCurrentId = localStorage.getItem('tsgh_pharmacy_current_week_id');
         const savedTeachers = localStorage.getItem('tsgh_pharmacy_teachers');
         const savedStudents = localStorage.getItem('tsgh_pharmacy_students');
+        const savedLinks = localStorage.getItem('tsgh_pharmacy_eval_links');
 
         if (savedTeachers) {
           try { teachers = JSON.parse(savedTeachers); } catch(e) {}
         }
         if (savedStudents) {
           try { students = JSON.parse(savedStudents); } catch(e) {}
+        }
+        if (savedLinks) {
+          try { 
+            evaluationLinks = JSON.parse(savedLinks); 
+            categories = Object.keys(evaluationLinks);
+          } catch(e) {}
         }
 
         if (savedWeeks) {
@@ -516,7 +596,6 @@
           weeksStore = [JSON.parse(JSON.stringify(defaultSampleWeek))];
         }
 
-        // 快取防呆修復：補全舊格式資料
         weeksStore.forEach(function(w) {
           if (!w.startDate) w.startDate = '2026-10-05';
           if (!Array.isArray(w.dates) || w.dates.length === 0) {
@@ -544,6 +623,7 @@
         localStorage.setItem('tsgh_pharmacy_current_week_id', currentWeekId);
         localStorage.setItem('tsgh_pharmacy_teachers', JSON.stringify(teachers));
         localStorage.setItem('tsgh_pharmacy_students', JSON.stringify(students));
+        localStorage.setItem('tsgh_pharmacy_eval_links', JSON.stringify(evaluationLinks));
       } catch(e) {
         console.warn("Storage write error", e);
       }
@@ -642,9 +722,9 @@
     }
 
     function getCategoryLink(cat) {
-      if (EVALUATION_LINKS[cat]) return EVALUATION_LINKS[cat];
-      for (const key in EVALUATION_LINKS) {
-        if (cat.indexOf(key) !== -1) return EVALUATION_LINKS[key];
+      if (evaluationLinks[cat]) return evaluationLinks[cat];
+      for (const key in evaluationLinks) {
+        if (cat.indexOf(key) !== -1) return evaluationLinks[key];
       }
       return null;
     }
@@ -677,6 +757,10 @@
             }
             if (decoded.teachers) teachers = decoded.teachers;
             if (decoded.students) students = decoded.students;
+            if (decoded.evaluationLinks) {
+              evaluationLinks = decoded.evaluationLinks;
+              categories = Object.keys(evaluationLinks);
+            }
           } catch(e) {
             console.error("Payload decode error:", e);
           }
@@ -744,7 +828,7 @@
                 '<div class="flex items-center justify-between mb-1">' +
                   '<span class="font-bold px-1.5 py-0.5 rounded text-[11px] ' + style.badgeBg + ' ' + style.badgeText + '">' + session.category + '</span>' +
                   '<div class="card-action-btn flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">' +
-                    '<button onclick="editSession(\'' + session.id + '\')" title="編輯" class="text-slate-400 hover:text-indigo-600 p-0.5"><i class="fa-solid fa-pen"></i></button>' +
+                    '<button onclick="editSession('' + session.id + '')" title="編輯" class="text-slate-400 hover:text-indigo-600 p-0.5"><i class="fa-solid fa-pen"></i></button>' +
                   '</div>' +
                 '</div>' +
                 '<div class="text-slate-800 font-semibold mb-1">' +
@@ -803,8 +887,8 @@
           '<td class="py-2.5 px-3 font-semibold text-slate-800">' + (s.students || []).join('、') + '</td>' +
           '<td class="py-2.5 px-3 text-indigo-900">' + (s.teachers || []).join('、') + '</td>' +
           '<td class="py-2.5 px-3 text-right admin-only no-export">' +
-            '<button onclick="editSession(\'' + s.id + '\')" class="text-slate-400 hover:text-indigo-600 text-xs px-2 py-1"><i class="fa-solid fa-pen"></i></button>' +
-            '<button onclick="deleteSessionDirect(\'' + s.id + '\')" class="text-slate-400 hover:text-rose-600 text-xs px-2 py-1"><i class="fa-regular fa-trash-can"></i></button>' +
+            '<button onclick="editSession('' + s.id + '')" class="text-slate-400 hover:text-indigo-600 text-xs px-2 py-1"><i class="fa-solid fa-pen"></i></button>' +
+            '<button onclick="deleteSessionDirect('' + s.id + '')" class="text-slate-400 hover:text-rose-600 text-xs px-2 py-1"><i class="fa-regular fa-trash-can"></i></button>' +
           '</td>';
         tbody.appendChild(tr);
       });
@@ -1053,6 +1137,7 @@
       document.getElementById('btnDeleteSession').classList.add('hidden');
       
       updateModalDateOptions();
+      updateCategorySelectOptions();
 
       const hasDate = cur.dates.some(function(d) { return d.id === targetDate; });
       document.getElementById('modalDate').value = hasDate ? targetDate : cur.dates[0].id;
@@ -1078,6 +1163,7 @@
       document.getElementById('btnDeleteSession').classList.remove('hidden');
 
       updateModalDateOptions();
+      updateCategorySelectOptions();
       document.getElementById('modalDate').value = session.date;
       document.getElementById('modalTimeSlot').value = session.timeSlot;
       document.getElementById('modalCategory').value = session.category;
@@ -1169,7 +1255,8 @@
       const payload = {
         currentWeek: cur,
         teachers: teachers,
-        students: students
+        students: students,
+        evaluationLinks: evaluationLinks
       };
       const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
       const currentUrl = window.location.origin + window.location.pathname;
@@ -1209,7 +1296,108 @@
     });
 
     // ==========================================
-    // 8. 初始化與所有事件監聽
+    // 8. 評量表連結自訂與新增功能 (Links Config)
+    // ==========================================
+    const linksConfigModal = document.getElementById('linksConfigModal');
+    const linksListContainer = document.getElementById('evaluationLinksList');
+
+    function renderLinksConfigEditor() {
+      linksListContainer.innerHTML = '';
+      const entries = Object.entries(evaluationLinks);
+      
+      entries.forEach(function(pair, index) {
+        const catName = pair[0];
+        const catUrl = pair[1];
+
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 link-item-row';
+        row.innerHTML = 
+          '<div class="w-1/3 min-w-[130px]">' +
+            '<input type="text" value="' + catName + '" placeholder="項目名稱 (例: EPA發藥)" class="link-cat-name w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-white">' +
+          '</div>' +
+          '<div class="flex-1">' +
+            '<input type="url" value="' + catUrl + '" placeholder="請貼上表單或系統連結 (https://...)" class="link-cat-url w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-white">' +
+          '</div>' +
+          '<button type="button" class="btn-remove-link-row text-slate-400 hover:text-rose-600 px-2 py-1" title="刪除此項目">' +
+            '<i class="fa-regular fa-trash-can"></i>' +
+          '</button>';
+
+        row.querySelector('.btn-remove-link-row').onclick = function() {
+          if (linksListContainer.querySelectorAll('.link-item-row').length <= 1) {
+            alert('至少需保留一個評核項目！');
+            return;
+          }
+          row.remove();
+        };
+
+        linksListContainer.appendChild(row);
+      });
+    }
+
+    // 開啟評量表連結設定
+    document.getElementById('btnOpenLinksConfig').addEventListener('click', function() {
+      renderLinksConfigEditor();
+      linksConfigModal.classList.remove('hidden');
+    });
+
+    document.getElementById('btnCloseLinksConfigModal').onclick = function() { linksConfigModal.classList.add('hidden'); };
+    document.getElementById('btnCancelLinksConfig').onclick = function() { linksConfigModal.classList.add('hidden'); };
+
+    // 點擊新增一列連結
+    document.getElementById('btnAddNewLinkRow').addEventListener('click', function() {
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 link-item-row';
+      row.innerHTML = 
+        '<div class="w-1/3 min-w-[130px]">' +
+          '<input type="text" placeholder="項目名稱 (例: Mini-CEX)" class="link-cat-name w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-white">' +
+        '</div>' +
+        '<div class="flex-1">' +
+          '<input type="url" placeholder="請貼上表單或系統連結 (https://...)" class="link-cat-url w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-white">' +
+        '</div>' +
+        '<button type="button" class="btn-remove-link-row text-slate-400 hover:text-rose-600 px-2 py-1" title="刪除此項目">' +
+          '<i class="fa-regular fa-trash-can"></i>' +
+        '</button>';
+
+      row.querySelector('.btn-remove-link-row').onclick = function() {
+        if (linksListContainer.querySelectorAll('.link-item-row').length <= 1) {
+          alert('至少需保留一個評核項目！');
+          return;
+        }
+        row.remove();
+      };
+
+      linksListContainer.appendChild(row);
+    });
+
+    // 儲存評量表連結設定
+    document.getElementById('btnSaveLinksConfig').addEventListener('click', function() {
+      const rows = linksListContainer.querySelectorAll('.link-item-row');
+      const newLinks = {};
+
+      rows.forEach(function(r) {
+        const name = r.querySelector('.link-cat-name').value.trim();
+        const url = r.querySelector('.link-cat-url').value.trim();
+        if (name) {
+          newLinks[name] = url;
+        }
+      });
+
+      if (Object.keys(newLinks).length === 0) {
+        alert('請至少設定一個評核項目！');
+        return;
+      }
+
+      evaluationLinks = newLinks;
+      categories = Object.keys(evaluationLinks);
+
+      saveStorage();
+      refreshAllViews();
+      linksConfigModal.classList.add('hidden');
+      showToast('評量表連結與項目已更新！');
+    });
+
+    // ==========================================
+    // 9. 初始化與所有事件監聽
     // ==========================================
     window.addEventListener('hashchange', function() {
       checkUrlMode();
@@ -1328,11 +1516,13 @@
       tDrop.addEventListener('change', addTeacher);
       document.getElementById('btnAddTeacherTag').onclick = addTeacher;
 
-      // 點擊頂部「新增評核場次」按鈕
-      document.getElementById('btnNewSession').onclick = function() {
+      // 點擊新增評核場次
+      function openModalForCurrent() {
         const cur = getCurrentWeek();
         openSessionModalFor(cur.dates[0].id, 'morning');
-      };
+      }
+      document.getElementById('btnNewSession').onclick = openModalForCurrent;
+      document.getElementById('btnNewSessionMenu').onclick = openModalForCurrent;
 
       document.getElementById('btnCloseModal').onclick = function() { sessionModal.classList.add('hidden'); };
       document.getElementById('btnCancelModal').onclick = function() { sessionModal.classList.add('hidden'); };
@@ -1346,7 +1536,6 @@
         const timeSlot = document.getElementById('modalTimeSlot').value;
         const category = document.getElementById('modalCategory').value;
 
-        // 若目前選單有停留人名但尚未點加入，自動納入
         if (sDrop.value && currentSelectedStudents.indexOf(sDrop.value) === -1) {
           currentSelectedStudents.push(sDrop.value);
         }
@@ -1424,7 +1613,6 @@
       document.getElementById('btnOpenConfig').onclick = function() {
         document.getElementById('configTeachersInput').value = teachers.join('、');
         document.getElementById('configStudentsInput').value = students.join('、');
-        document.getElementById('configCategoriesInput').value = categories.join(',');
         configModal.classList.remove('hidden');
       };
       document.getElementById('btnCloseConfigModal').onclick = function() { configModal.classList.add('hidden'); };
@@ -1432,22 +1620,21 @@
 
       document.getElementById('btnSaveConfig').onclick = function() {
         function parseList(str) {
-          return str.split(/[,，、\s\n]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+          return str.split(/[,，、\s
+]+/).map(function(s) { return s.trim(); }).filter(Boolean);
         }
 
         const newTeachers = parseList(document.getElementById('configTeachersInput').value);
         const newStudents = parseList(document.getElementById('configStudentsInput').value);
-        const newCats = parseList(document.getElementById('configCategoriesInput').value);
 
         if (newTeachers.length > 0) teachers = newTeachers;
         if (newStudents.length > 0) students = newStudents;
-        if (newCats.length > 0) categories = newCats;
 
         saveStorage();
         initDropdowns();
         refreshAllViews();
         configModal.classList.add('hidden');
-        showToast('名單與設定已即時更新完成！');
+        showToast('教師與學員名單已即時更新完成！');
       };
 
       // 左下角懸浮按鈕
