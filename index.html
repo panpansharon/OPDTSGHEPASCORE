@@ -34,6 +34,7 @@
           <i class="fa-solid fa-lock text-xs text-amber-400"></i> 返回後台管理
         </button>
 
+        <!-- 1. 功能表 下拉選單 -->
         <div class="relative nav-dropdown py-1">
           <button class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-800 hover:bg-indigo-700 text-white font-medium rounded-md shadow-xs transition border border-indigo-700/70">
             <i class="fa-solid fa-bars text-xs text-indigo-300"></i>
@@ -46,22 +47,23 @@
               <i class="fa-solid fa-plus w-4 text-blue-600"></i>
               <span>新增評核場次</span>
             </button>
-            <button id="btnOpenShareModal" class="admin-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-purple-700">
+            <button id="btnOpenShareModalMenu" class="admin-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-purple-700">
               <i class="fa-solid fa-share-nodes w-4 text-purple-600"></i>
               <span>展示版專屬連結</span>
             </button>
             <div class="border-t border-slate-100 my-1"></div>
-            <button id="btnExportImage" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-emerald-700">
+            <button id="btnExportImageMenu" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-emerald-700">
               <i class="fa-solid fa-image w-4 text-emerald-600"></i>
               <span>下載排班圖片 (僅週表)</span>
             </button>
-            <button id="btnExportCSV" class="admin-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-slate-700">
+            <button id="btnExportCSVMenu" class="admin-only w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-slate-700">
               <i class="fa-solid fa-file-csv w-4 text-slate-500"></i>
               <span>匯出 Excel (CSV)</span>
             </button>
           </div>
         </div>
 
+        <!-- 2. 設定 下拉選單 -->
         <div class="admin-only relative nav-dropdown py-1">
           <button class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-800 hover:bg-indigo-700 text-white font-medium rounded-md shadow-xs transition border border-indigo-700/70">
             <i class="fa-solid fa-gear text-xs text-indigo-300"></i>
@@ -70,13 +72,13 @@
           </button>
           
           <div class="nav-dropdown-menu hidden absolute right-0 mt-1 w-52 bg-white text-slate-800 rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
-            <button id="btnOpenConfig" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-slate-700">
+            <button id="btnOpenConfigMenu" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-slate-700">
               <i class="fa-solid fa-users-gear w-4 text-indigo-600"></i>
-              <span>名單設定 (教師與學員)</span>
+              <span>名單設定</span>
             </button>
-            <button id="btnOpenLinksConfig" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-slate-700">
+            <button id="btnOpenLinksConfigMenu" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs font-medium text-slate-700">
               <i class="fa-solid fa-link w-4 text-emerald-600"></i>
-              <span>評量表連結設定</span>
+              <span>評量表連結</span>
             </button>
           </div>
         </div>
@@ -387,8 +389,6 @@
   </div>
 
   <script>
-
-    // 評量表連結預設資料
     var DEFAULT_EVALUATION_LINKS = {
       'EPA發藥': 'https://docs.google.com/forms/d/e/1FAIpQLSfNnVcWIBGOqpYGAS7r2U_puBsiSujMK32bqd6MOSUCqw3_0Q/viewform?usp=header',
       'EPA覆核': 'https://docs.google.com/forms/d/e/1FAIpQLSf2TF9p1V2tQnEULziYYFDLcli47vtJmH7-G4SrHQNix3Czdg/viewform?usp=header',
@@ -1084,7 +1084,7 @@
       }
     }
 
-    document.getElementById('btnExportImage').addEventListener('click', async function() {
+    document.getElementById('btnExportImageMenu').addEventListener('click', async function() {
       var tableArea = document.getElementById('scheduleTableCaptureArea');
       tableArea.classList.add('is-exporting');
 
@@ -1114,10 +1114,10 @@
       }
     });
 
-    document.getElementById('btnExportCSV').addEventListener('click', function() {
+    document.getElementById('btnExportCSVMenu').addEventListener('click', function() {
       var cur = getCurrentWeek();
       var newline = String.fromCharCode(10);
-      var csvLines = ['\uFEFF週次,日期,時段,評核項目,受評學員(PGY),評核教師'];
+      var csvLines = ['﻿週次,日期,時段,評核項目,受評學員(PGY),評核教師'];
       (cur.sessions || []).forEach(function(s) {
         var dateObj = cur.dates.find(function(d) { return d.id === s.date; });
         var dateStr = dateObj ? dateObj.label : s.date;
@@ -1154,7 +1154,7 @@
       return currentUrl + '#view=display&data=' + encoded;
     }
 
-    document.getElementById('btnOpenShareModal').addEventListener('click', function() {
+    document.getElementById('btnOpenShareModalMenu').addEventListener('click', function() {
       var url = generateDisplayUrl();
       shareInput.value = url;
       shareModal.classList.remove('hidden');
@@ -1222,7 +1222,7 @@
       });
     }
 
-    document.getElementById('btnOpenLinksConfig').addEventListener('click', function() {
+    document.getElementById('btnOpenLinksConfigMenu').addEventListener('click', function() {
       renderLinksConfigEditor();
       linksConfigModal.classList.remove('hidden');
     });
@@ -1480,7 +1480,7 @@
       };
 
       var configModal = document.getElementById('configModal');
-      document.getElementById('btnOpenConfig').onclick = function() {
+      document.getElementById('btnOpenConfigMenu').onclick = function() {
         document.getElementById('configTeachersInput').value = teachers.join('、');
         document.getElementById('configStudentsInput').value = students.join('、');
         configModal.classList.remove('hidden');
@@ -1489,7 +1489,7 @@
       document.getElementById('btnCancelConfig').onclick = function() { configModal.classList.add('hidden'); };
 
       document.getElementById('btnSaveConfig').onclick = function() {
-        var regex = new RegExp('[,，、\\s]+');
+        var regex = new RegExp('[,，、\s]+');
         var newTeachers = document.getElementById('configTeachersInput').value.split(regex).map(function(s) { return s.trim(); }).filter(Boolean);
         var newStudents = document.getElementById('configStudentsInput').value.split(regex).map(function(s) { return s.trim(); }).filter(Boolean);
 
@@ -1519,7 +1519,6 @@
         showToast('名單與排程資料已重整完畢！');
       };
     });
-
   </script>
 </body>
 </html>
